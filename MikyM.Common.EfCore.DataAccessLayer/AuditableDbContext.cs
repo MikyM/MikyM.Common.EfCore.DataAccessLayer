@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Options;
 using MikyM.Common.Domain.Entities;
 
@@ -17,6 +18,12 @@ public abstract class AuditableDbContext : DbContext
     protected string? AuditUserId { get; set; }
     private readonly  IOptions<EfCoreDataAccessConfiguration> _config;
 
+    /// <inheritdoc />
+    protected AuditableDbContext(DbContextOptions options) : base(options)
+    {
+        _config = this.GetService<IOptions<EfCoreDataAccessConfiguration>>();
+    }
+    
     /// <inheritdoc />
     protected AuditableDbContext(DbContextOptions options, IOptions<EfCoreDataAccessConfiguration> config) : base(options)
     {

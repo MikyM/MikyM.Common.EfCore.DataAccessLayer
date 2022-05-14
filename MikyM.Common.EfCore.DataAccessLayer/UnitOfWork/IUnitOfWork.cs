@@ -34,5 +34,4 @@ public interface IUnitOfWork<TContext> : IUnitOfWork where TContext : DbContext
     /// Current <see cref="DbContext"/>
     /// </summary>
     TContext Context { get; }
-    
 }
