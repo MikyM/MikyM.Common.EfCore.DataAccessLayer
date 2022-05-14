@@ -30,7 +30,7 @@ public static class DependancyInjectionExtensions
     /// </remarks>
     /// <param name="configuration">Current instance of <see cref="DataAccessConfiguration"/></param>
     /// <param name="options"><see cref="Action"/> that configures DAL.</param>
-    public static ContainerBuilder AddDataAccessLayer(this DataAccessConfiguration configuration, Action<EfCoreDataAccessConfiguration>? options = null)
+    public static DataAccessConfiguration AddEfCoreDataAccessLayer(this DataAccessConfiguration configuration, Action<EfCoreDataAccessConfiguration>? options = null)
     {
         if (configuration.GetType().GetField("Builder", BindingFlags.Instance |
                                                         BindingFlags.NonPublic |
@@ -94,7 +94,7 @@ public static class DependancyInjectionExtensions
             .FindConstructorsWith(ctorFinder)
             .SingleInstance();
 
-        return builder;
+        return configuration;
     }
 
     /// <summary>
