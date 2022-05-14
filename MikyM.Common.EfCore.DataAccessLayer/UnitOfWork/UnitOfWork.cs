@@ -135,6 +135,30 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
         _ = await Context.SaveChangesAsync(userId);
         if (_transaction is not null) await _transaction.CommitAsync();
     }
+    
+    /// <inheritdoc />
+    public async Task<int> CommitWithCountAsync()
+    {
+        if (_options.Value.OnBeforeSaveChangesActions is not null &&
+            _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
+            await action.Invoke(this);
+
+        int result = await Context.SaveChangesAsync();
+        if (_transaction is not null) await _transaction.CommitAsync();
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<int> CommitWithCountAsync(string? userId)
+    {
+        if (_options.Value.OnBeforeSaveChangesActions is not null &&
+            _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
+            await action.Invoke(this);
+        
+        int result = await Context.SaveChangesAsync(userId);
+        if (_transaction is not null) await _transaction.CommitAsync();
+        return result;
+    }
 
     // Public implementation of Dispose pattern callable by consumers.
     /// <inheritdoc />

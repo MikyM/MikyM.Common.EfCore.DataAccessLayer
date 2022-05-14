@@ -1,4 +1,5 @@
 ﻿using MikyM.Common.DataAccessLayer;
+using MikyM.Common.Utilities.Results;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.UnitOfWork;
 
@@ -12,6 +13,14 @@ public interface IUnitOfWork : IUnitOfWorkBase
     /// </summary>
     /// <returns>Task representing the asynchronous operation</returns>
     Task UseTransactionAsync();
+    
+    /// <inheritdoc cref="IUnitOfWorkBase.CommitAsync(string)"/>
+    /// <returns>Number of affected rows</returns>
+    Task<int> CommitWithCountAsync(string? auditUserId);
+
+    /// <inheritdoc cref="IUnitOfWorkBase.CommitAsync()"/>
+    /// <returns>Number of affected rows</returns>
+    Task<int> CommitWithCountAsync();
 }
 
 /// <inheritdoc cref="IUnitOfWork"/>
