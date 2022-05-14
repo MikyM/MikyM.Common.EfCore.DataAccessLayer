@@ -32,7 +32,7 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
     /// <summary>
     /// Repository cache
     /// </summary>
-    private ConcurrentDictionary<string, Lazy<IBaseRepository>>? _repositories;
+    private ConcurrentDictionary<string, Lazy<IRepositoryBase>>? _repositories;
     /// <summary>
     /// Repository entity type cache
     /// </summary>
@@ -63,9 +63,9 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
         => _transaction ??= await Context.Database.BeginTransactionAsync();
 
     /// <inheritdoc />
-    public TRepository GetRepository<TRepository>() where TRepository : class, IBaseRepository
+    public TRepository GetRepository<TRepository>() where TRepository : class, IRepositoryBase
     {
-        _repositories ??= new ConcurrentDictionary<string, Lazy<IBaseRepository>>();
+        _repositories ??= new ConcurrentDictionary<string, Lazy<IRepositoryBase>>();
         _entityTypesOfRepositories ??= new ConcurrentDictionary<string, string>();
 
         var type = typeof(TRepository);
@@ -91,7 +91,7 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
                 throw new InvalidOperationException(
                     "Seems like you tried to create a different type of repository (ie. both read-only and crud) for same entity type within same unit of work instance - it is not supported as it may lead to unexpected results");
 
-            return new Lazy<IBaseRepository>(() =>
+            return new Lazy<IRepositoryBase>(() =>
             {
                 var instance = Activator.CreateInstance(type,
                     BindingFlags.NonPublic | BindingFlags.Instance, null, new object[]
@@ -115,27 +115,25 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
     }
 
     /// <inheritdoc />
-    public async Task<int> CommitAsync()
+    public async Task CommitAsync()
     {
         if (_options.Value.OnBeforeSaveChangesActions is not null &&
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
             await action.Invoke(this);
 
-        int result = await Context.SaveChangesAsync();
+        _ = await Context.SaveChangesAsync();
         if (_transaction is not null) await _transaction.CommitAsync();
-        return result;
     }
 
     /// <inheritdoc />
-    public async Task<int> CommitAsync(string? userId)
+    public async Task CommitAsync(string? userId)
     {
         if (_options.Value.OnBeforeSaveChangesActions is not null &&
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
             await action.Invoke(this);
         
-        int result = await Context.SaveChangesAsync(userId);
+        _ = await Context.SaveChangesAsync(userId);
         if (_transaction is not null) await _transaction.CommitAsync();
-        return result;
     }
 
     // Public implementation of Dispose pattern callable by consumers.

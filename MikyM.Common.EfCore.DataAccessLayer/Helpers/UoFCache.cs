@@ -11,11 +11,11 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Helpers
         {
             CachedRepositoryClassTypes ??= AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(x => x.GetTypes().Where(t =>
-                    t.IsClass && !t.IsAbstract && t.GetInterface(nameof(IBaseRepository)) is not null))
+                    t.IsClass && !t.IsAbstract && t.GetInterface(nameof(IRepositoryBase)) is not null))
                 .ToList();
             CachedRepositoryInterfaceTypes ??= AppDomain.CurrentDomain.GetAssemblies()
                 .SelectMany(x => x.GetTypes().Where(t =>
-                    t.IsInterface && t.GetInterface(nameof(IBaseRepository)) is not null))
+                    t.IsInterface && t.GetInterface(nameof(IRepositoryBase)) is not null))
                 .ToList();
             CachedRepositoryInterfaceImplTypes ??= CachedRepositoryInterfaceTypes.ToDictionary(intr => intr,
                 intr => CachedRepositoryClassTypes.FirstOrDefault(intr.IsDirectAncestor))!;
