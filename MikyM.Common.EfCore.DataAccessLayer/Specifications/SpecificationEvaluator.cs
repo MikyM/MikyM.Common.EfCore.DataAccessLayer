@@ -47,7 +47,7 @@ public class SpecificationEvaluator : ISpecificationEvaluator
         query = GetQuery(query, (ISpecification<T>)specification);
 
         return specification.Selector is not null
-            ? query.Select(specification.Selector ?? throw new InvalidOperationException())
+            ? query.Select(specification.Selector)
             : _projectionEvaluator.GetQuery(query, specification);
     }
 

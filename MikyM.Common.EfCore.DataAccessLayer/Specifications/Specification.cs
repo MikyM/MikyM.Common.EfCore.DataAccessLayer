@@ -81,6 +81,17 @@ public
         Query.WithMapperConfiguration(mapperConfiguration);
         return this;
     }
+    
+    /// <summary>
+    /// Specify a transform function to apply to the <typeparamref name="T"/> element 
+    /// </summary>
+    /// <param name="selector">Selector</param>
+    /// <returns>Current specification instance</returns>
+    protected Specification<T> Select(Expression<Func<T, TResult>> selector)
+    {
+        Query.Select(selector);
+        return this;
+    }
 
     /// <summary>
     /// Expands given member.
