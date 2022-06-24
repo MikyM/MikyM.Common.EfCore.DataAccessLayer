@@ -14,7 +14,15 @@ public class SpecificationComparer<TSpecification, TEntity> : IEqualityComparer<
     }
 
     public bool Equals(TSpecification? left, TSpecification? right)
-        => left?.GetHashCode() == right?.GetHashCode();
+    {
+        if (left is null && right is null)
+            return true;
+
+        if (left is null || right is null)
+            return false;
+        
+        return GetHashCode(left) == GetHashCode(right);
+    }
 
     public int GetHashCode(TSpecification obj)
     {
