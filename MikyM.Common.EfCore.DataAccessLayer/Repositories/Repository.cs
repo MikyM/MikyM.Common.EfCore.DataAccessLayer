@@ -127,4 +127,26 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
         BeginUpdateRange(entities);
         entities.ForEach(ent => ent.IsDisabled = true);
     }
+
+    /// <inheritdoc />
+    public void Detach(TEntity entity)
+    {
+        foreach (var entry in Context.Entry(entity).Navigations)
+        {
+            switch (entry.CurrentValue)
+            {
+                case IEnumerable<AggregateRootEntity> children:
+                {
+                    foreach (var child in children)
+                        Context.Entry(child).State = EntityState.Detached;
+                    break;
+                }
+                case AggregateRootEntity child:
+                    Context.Entry(child).State = EntityState.Detached;
+                    break;
+            }
+        }
+        
+        Context.Entry(entity).State = EntityState.Detached;
+    }
 }

@@ -71,4 +71,9 @@ public interface IRepository<TEntity> : IReadOnlyRepository<TEntity> where TEnti
     /// </summary>
     /// <param name="ids">Ids of the entities to disable</param>
     Task DisableRangeAsync(IEnumerable<long> ids);
+    /// <summary>
+    /// Detaches an entity and it's children.
+    /// </summary>
+    /// <param name="entity">Entity to delete</param>
+    void Detach(TEntity entity);
 }
