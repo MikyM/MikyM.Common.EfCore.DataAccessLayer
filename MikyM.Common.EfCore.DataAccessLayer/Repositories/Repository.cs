@@ -131,22 +131,44 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
     /// <inheritdoc />
     public void Detach(TEntity entity)
     {
+        Context.Entry(entity).State = EntityState.Detached;
+        DetachRoot(entity);
+    }
+
+    private void DetachRoot(AggregateRootEntity entity)
+    {
         foreach (var entry in Context.Entry(entity).Navigations)
         {
             switch (entry.CurrentValue)
             {
-                case IEnumerable<AggregateRootEntity> children:
+                case IEnumerable<AggregateRootEntity> navs:
                 {
-                    foreach (var child in children)
-                        Context.Entry(child).State = EntityState.Detached;
+                    var list = navs.ToList();
+
+                    if (list.All(x => Context.Entry(x).State is EntityState.Detached))
+                        break;
+
+                    foreach (var nav in list.Where(x => Context.Entry(x).State is not EntityState.Detached))
+                    {
+                        var enumerableEntry = Context.Entry(nav);
+
+                        enumerableEntry.State = EntityState.Detached;
+                        DetachRoot(nav);
+                    }
+                    
                     break;
                 }
-                case AggregateRootEntity child:
-                    Context.Entry(child).State = EntityState.Detached;
+                case AggregateRootEntity nav:
+                {
+                    var singularEntry = Context.Entry(nav);
+                    if (singularEntry.State is EntityState.Detached)
+                        break;
+
+                    singularEntry.State = EntityState.Detached;
+                    DetachRoot(nav);
                     break;
+                }
             }
         }
-        
-        Context.Entry(entity).State = EntityState.Detached;
     }
 }
