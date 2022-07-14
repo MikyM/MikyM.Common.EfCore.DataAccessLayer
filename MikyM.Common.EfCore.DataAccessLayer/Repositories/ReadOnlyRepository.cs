@@ -27,8 +27,6 @@ public class ReadOnlyRepository<TEntity> : IReadOnlyRepository<TEntity> where TE
     /// </summary>
     private readonly ISpecificationEvaluator _specificationEvaluator;
 
-    private Type _entityType;
-
     internal ReadOnlyRepository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator)
     {
         Context = context ?? throw new ArgumentNullException(nameof(context));
