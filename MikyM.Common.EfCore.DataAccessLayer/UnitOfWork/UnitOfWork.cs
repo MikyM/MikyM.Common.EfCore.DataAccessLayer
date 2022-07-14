@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.Options;
 using MikyM.Common.DataAccessLayer.Repositories;
 using MikyM.Common.EfCore.DataAccessLayer.Context;
 using MikyM.Common.EfCore.DataAccessLayer.Helpers;
+using MikyM.Common.EfCore.DataAccessLayer.Repositories;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.UnitOfWork;
@@ -77,11 +79,24 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
         
         if (type.IsInterface)
         {
-            if (!UoFCache.CachedRepositoryInterfaceImplTypes.TryGetValue(type, out var implType))
-                throw new InvalidOperationException($"Couldn't find a non-abstract implementation of {name}");
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IRepository<>))
+            {
+                type = UoFCache.CachedCrudRepos.GetValueOrDefault(entityType);
+                name = type?.FullName ?? throw new InvalidOperationException();
+            }
 
-            type = implType;
-            name = implType.FullName ?? throw new InvalidOperationException();
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<>))
+            {
+                type = UoFCache.CachedReadOnlyRepos.GetValueOrDefault(entityType);
+                name = type?.FullName ?? throw new InvalidOperationException();
+            }
+            else
+            {
+                if (!UoFCache.CachedRepositoryInterfaceImplTypes.TryGetValue(type, out var implType))
+                    throw new InvalidOperationException($"Couldn't find a non-abstract implementation of {name}");
+                type = implType;
+                name = implType.FullName ?? throw new InvalidOperationException();
+            }
         }
 
         // lazy to avoid creating whole repository and then discarding it due to the fact that GetOrAdd isn't atomic, creation of Lazy<T> is very cheap
