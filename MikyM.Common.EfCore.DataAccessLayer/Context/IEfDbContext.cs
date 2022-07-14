@@ -2,6 +2,7 @@
 using System.Threading;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.Context;
 
@@ -23,4 +24,7 @@ public interface IEfDbContext : IDisposable, IAsyncDisposable
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default);
     int SaveChanges();
+    IModel Model { get; }
+    ChangeTracker ChangeTracker { get; }
+    DbContextId ContextId { get; }
 }

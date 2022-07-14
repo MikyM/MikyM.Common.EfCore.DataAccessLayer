@@ -20,7 +20,7 @@ public abstract class AuditableDbContext : EfDbContext
     protected AuditableDbContext(DbContextOptions options) : base(options)
     {
     }
-    
+
     /// <inheritdoc />
     protected AuditableDbContext(DbContextOptions options, IOptions<EfCoreDataAccessConfiguration> config) : base(options)
     {
