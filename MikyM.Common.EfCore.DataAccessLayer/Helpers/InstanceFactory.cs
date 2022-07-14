@@ -1,36 +1,37 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.Helpers;
 
-public static class InstanceFactory
+internal static class InstanceFactory
 {
   private delegate object? CreateDelegate(Type type, object? arg1, object? arg2, object? arg3);
 
   private static readonly ConcurrentDictionary<Tuple<Type, Type, Type, Type>, CreateDelegate> CachedFuncs = new();
 
-  public static object? CreateInstance(Type type)
+  internal static object? CreateInstance(Type type)
   {
     return InstanceFactoryGeneric<TypeToIgnore, TypeToIgnore, TypeToIgnore>.CreateInstance(type, null, null, null);
   }
 
-  public static object? CreateInstance<TArg1>(Type type, TArg1 arg1)
+  internal static object? CreateInstance<TArg1>(Type type, TArg1 arg1)
   {
     return InstanceFactoryGeneric<TArg1, TypeToIgnore, TypeToIgnore>.CreateInstance(type, arg1, null, null);
   }
 
-  public static object? CreateInstance<TArg1, TArg2>(Type type, TArg1 arg1, TArg2 arg2)
+  internal static object? CreateInstance<TArg1, TArg2>(Type type, TArg1 arg1, TArg2 arg2)
   {
     return InstanceFactoryGeneric<TArg1, TArg2, TypeToIgnore>.CreateInstance(type, arg1, arg2, null);
   }
 
-  public static object? CreateInstance<TArg1, TArg2, TArg3>(Type type, TArg1 arg1, TArg2 arg2, TArg3 arg3)
+  internal static object? CreateInstance<TArg1, TArg2, TArg3>(Type type, TArg1 arg1, TArg2 arg2, TArg3 arg3)
   {
     return InstanceFactoryGeneric<TArg1, TArg2, TArg3>.CreateInstance(type, arg1, arg2, arg3);
   }
 
-  public static object? CreateInstance(Type type, params object?[]? args)
+  internal static object? CreateInstance(Type type, params object?[]? args)
   {
     if (args is null)
       return CreateInstance(type);
@@ -65,7 +66,7 @@ public static class InstanceFactory
     var method = typeof(InstanceFactory)
       .GetMethods()
       .Where(m => m.Name == "CreateInstance").Single(m => m.GetParameters().Length == 4);
-    var generic = method.MakeGenericMethod(new[] { key.Item2, key.Item3, key.Item4 });
+    var generic = method.MakeGenericMethod(key.Item2, key.Item3, key.Item4);
 
     var paramExpr = new List<ParameterExpression>();
     paramExpr.Add(Expression.Parameter(typeof(Type)));
@@ -85,11 +86,11 @@ public static class InstanceFactory
   }
 }
 
-public static class InstanceFactoryGeneric<TArg1, TArg2, TArg3>
+internal static class InstanceFactoryGeneric<TArg1, TArg2, TArg3>
 {
   private static readonly ConcurrentDictionary<Type, Func<TArg1?, TArg2?, TArg3?, object>> CachedFuncs = new();
 
-  public static object? CreateInstance(Type type, TArg1? arg1, TArg2? arg2, TArg3? arg3)
+  internal static object? CreateInstance(Type type, TArg1? arg1, TArg2? arg2, TArg3? arg3)
     => CachedFuncs.TryGetValue(type, out var func) ? func(arg1, arg2, arg3) : CacheFunc(type, arg1, arg2, arg3)(arg1, arg2, arg3);
 
   private static Func<TArg1?, TArg2?, TArg3?, object> CacheFunc(Type type, TArg1? arg1, TArg2? arg2, TArg3? arg3)
@@ -109,7 +110,7 @@ public static class InstanceFactoryGeneric<TArg1, TArg2, TArg3>
       Expression.Parameter(typeof(TArg3)),
     };
 
-    var constructor = type.GetConstructor(constructorTypes.ToArray());
+    var constructor = type.GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, constructorTypes.ToArray());
     var constructorParameters = parameters.Take(constructorTypes.Count).ToList();
     var newExpr = Expression.New(constructor ?? throw new InvalidOperationException(), constructorParameters);
     var lambdaExpr = Expression.Lambda<Func<TArg1?, TArg2?, TArg3?, object>>(newExpr, parameters);
@@ -119,6 +120,6 @@ public static class InstanceFactoryGeneric<TArg1, TArg2, TArg3>
   }
 }
 
-public class TypeToIgnore
+internal class TypeToIgnore
 {
 }
