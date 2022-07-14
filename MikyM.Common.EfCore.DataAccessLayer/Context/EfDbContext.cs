@@ -39,5 +39,15 @@ public abstract class EfDbContext : DbContext, IEfDbContext
     public TEntity? FindTracked<TEntity>(params object[] keyValues) where TEntity : class
         => DbContextExtensions.FindTracked<TEntity>(this, keyValues);
 
+    /// <summary>
+    /// Gets the table's name that is mapped to given entity type.
+    /// </summary>
+    /// <typeparam name="TEntity">Entity type</typeparam>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException">Throw when couldn't find the entity type or the table name</exception>
+    public string? GetTableName<TEntity>() where TEntity : class
+        => Model.FindEntityType(typeof(TEntity))?.GetTableName() ??
+           throw new InvalidOperationException($"Couldn't find table name or entity type {typeof(TEntity).Name}");
+
     protected abstract void OnBeforeSaveChanges(string? userId = null);
 }

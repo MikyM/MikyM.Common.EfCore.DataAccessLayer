@@ -27,4 +27,5 @@ public interface IEfDbContext : IDisposable, IAsyncDisposable
     IModel Model { get; }
     ChangeTracker ChangeTracker { get; }
     DbContextId ContextId { get; }
+    string? GetTableName<TEntity>() where TEntity : class;
 }
