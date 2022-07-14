@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using MikyM.Common.DataAccessLayer.Repositories;
 using MikyM.Common.Domain.Entities;
 using MikyM.Common.EfCore.DataAccessLayer.Repositories;
@@ -38,5 +39,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Helpers
         internal static IEnumerable<Type> EntityTypes { get; }
         internal static Dictionary<Type, Type> CachedReadOnlyRepos { get; }
         internal static Dictionary<Type, Type> CachedCrudRepos { get; }
+        internal static ConstructorInfo RepoCtor { get; }
+        internal static ConstructorInfo ReadOnlyRepoCtor { get; }
     }
 }

@@ -108,11 +108,13 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
 
             return new Lazy<IRepositoryBase>(() =>
             {
-                var instance = Activator.CreateInstance(type,
+                var instance =
+                    InstanceFactory.CreateInstance(type, Context,
+                        _specificationEvaluator); /*Activator.CreateInstance(type,
                     BindingFlags.NonPublic | BindingFlags.Instance, null, new object[]
                     {
                         Context, _specificationEvaluator
-                    }, CultureInfo.InvariantCulture);
+                    }, CultureInfo.InvariantCulture);*/
 
                 if (instance is null) throw new InvalidOperationException($"Couldn't create an instance of {name}");
 
