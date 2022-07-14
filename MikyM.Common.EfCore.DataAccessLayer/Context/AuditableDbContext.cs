@@ -1,33 +1,29 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Options;
 using MikyM.Common.Domain.Entities;
 
-namespace MikyM.Common.EfCore.DataAccessLayer;
+namespace MikyM.Common.EfCore.DataAccessLayer.Context;
 
 /// <summary>
 /// Auditable <see cref="DbContext"/>
 /// </summary>
 /// <inheritdoc cref="DbContext"/>
-public abstract class AuditableDbContext : DbContext
+public abstract class AuditableDbContext : EfDbContext
 {
     /// <summary>
     /// Id of the user responsible for changes done within this context
     /// </summary>
     protected string? AuditUserId { get; set; }
-    private readonly  IOptions<EfCoreDataAccessConfiguration> _config;
 
     /// <inheritdoc />
     protected AuditableDbContext(DbContextOptions options) : base(options)
     {
-        _config = this.GetService<IOptions<EfCoreDataAccessConfiguration>>();
     }
     
     /// <inheritdoc />
     protected AuditableDbContext(DbContextOptions options, IOptions<EfCoreDataAccessConfiguration> config) : base(options)
     {
-        _config = config;
     }
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -70,7 +66,7 @@ public abstract class AuditableDbContext : DbContext
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default)
     {
-        if (!_config.Value.DisableOnBeforeSaveChanges) OnBeforeSaveChanges(AuditUserId);
+        if (!Config.Value.DisableOnBeforeSaveChanges) OnBeforeSaveChanges(AuditUserId);
         return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 

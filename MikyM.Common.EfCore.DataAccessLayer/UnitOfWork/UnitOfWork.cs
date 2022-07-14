@@ -4,8 +4,8 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 using MikyM.Common.DataAccessLayer.Repositories;
+using MikyM.Common.EfCore.DataAccessLayer.Context;
 using MikyM.Common.EfCore.DataAccessLayer.Helpers;
-using MikyM.Common.EfCore.DataAccessLayer.Repositories;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.UnitOfWork;
@@ -14,7 +14,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.UnitOfWork;
 /// Unit of work implementation
 /// </summary>
 /// <inheritdoc cref="IUnitOfWork{TContext}"/>
-public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext : AuditableDbContext
+public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext : IEfDbContext
 {
     /// <summary>
     /// Inner <see cref="ISpecificationEvaluator"/>
@@ -120,7 +120,6 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
         if (_options.Value.OnBeforeSaveChangesActions is not null &&
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
             await action.Invoke(this);
-
         _ = await Context.SaveChangesAsync();
         if (_transaction is not null) await _transaction.CommitAsync();
     }
@@ -131,8 +130,12 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
         if (_options.Value.OnBeforeSaveChangesActions is not null &&
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
             await action.Invoke(this);
+
+        if (Context is AuditableDbContext auditableDbContext)
+            _ = await auditableDbContext.SaveChangesAsync(userId);
+        else
+            _ = await Context.SaveChangesAsync();
         
-        _ = await Context.SaveChangesAsync(userId);
         if (_transaction is not null) await _transaction.CommitAsync();
     }
     
@@ -154,8 +157,13 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
         if (_options.Value.OnBeforeSaveChangesActions is not null &&
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
             await action.Invoke(this);
-        
-        int result = await Context.SaveChangesAsync(userId);
+
+        int result;
+        if (Context is AuditableDbContext auditableDbContext)
+            result = await auditableDbContext.SaveChangesAsync(userId);
+        else
+            result = await Context.SaveChangesAsync();
+
         if (_transaction is not null) await _transaction.CommitAsync();
         return result;
     }

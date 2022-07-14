@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Autofac;
 using Microsoft.Extensions.Options;
+using MikyM.Common.EfCore.DataAccessLayer.Context;
 using MikyM.Common.EfCore.DataAccessLayer.Helpers;
 using MikyM.Common.EfCore.DataAccessLayer.UnitOfWork;
 

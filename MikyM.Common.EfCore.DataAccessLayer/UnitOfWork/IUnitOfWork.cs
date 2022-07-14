@@ -1,5 +1,5 @@
 ﻿using MikyM.Common.DataAccessLayer;
-using MikyM.Common.Utilities.Results;
+using MikyM.Common.EfCore.DataAccessLayer.Context;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.UnitOfWork;
 
@@ -28,7 +28,7 @@ public interface IUnitOfWork : IUnitOfWorkBase
 /// Unit of work definition
 /// </summary>
 /// <typeparam name="TContext">Type of context to be used</typeparam>
-public interface IUnitOfWork<TContext> : IUnitOfWork where TContext : DbContext
+public interface IUnitOfWork<TContext> : IUnitOfWork where TContext : IEfDbContext
 {
     /// <summary>
     /// Current <see cref="DbContext"/>

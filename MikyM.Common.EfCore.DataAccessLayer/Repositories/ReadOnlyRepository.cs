@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using MikyM.Common.Domain.Entities;
+using MikyM.Common.EfCore.DataAccessLayer.Context;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
 
@@ -17,9 +18,9 @@ public class ReadOnlyRepository<TEntity> : IReadOnlyRepository<TEntity> where TE
     public Type EntityType => typeof(TEntity);
     
     /// <summary>
-    /// Current <see cref="DbContext"/>
+    /// Current <see cref="IEfDbContext"/>
     /// </summary>
-    protected readonly DbContext Context;
+    protected readonly IEfDbContext Context;
 
     /// <summary>
     /// Inner evaluator
@@ -28,7 +29,7 @@ public class ReadOnlyRepository<TEntity> : IReadOnlyRepository<TEntity> where TE
 
     private Type _entityType;
 
-    internal ReadOnlyRepository(DbContext context, ISpecificationEvaluator specificationEvaluator)
+    internal ReadOnlyRepository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator)
     {
         Context = context ?? throw new ArgumentNullException(nameof(context));
         _specificationEvaluator = specificationEvaluator;

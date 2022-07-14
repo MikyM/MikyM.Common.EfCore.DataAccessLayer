@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using MikyM.Common.Domain.Entities;
+using MikyM.Common.EfCore.DataAccessLayer.Context;
 using MikyM.Common.EfCore.DataAccessLayer.Exceptions;
-using MikyM.Common.EfCore.DataAccessLayer.Helpers;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
@@ -13,7 +13,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEntity>
     where TEntity : AggregateRootEntity
 {
-    internal Repository(DbContext context, ISpecificationEvaluator specificationEvaluator) : base(context,
+    internal Repository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator) : base(context,
         specificationEvaluator)
     {
     }
