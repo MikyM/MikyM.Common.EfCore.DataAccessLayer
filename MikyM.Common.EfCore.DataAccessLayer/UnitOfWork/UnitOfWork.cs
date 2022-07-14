@@ -79,23 +79,24 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
         
         if (type.IsInterface)
         {
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IRepository<>))
+            switch (type.IsGenericType)
             {
-                type = UoFCache.CachedCrudRepos.GetValueOrDefault(entityType);
-                name = type?.FullName ?? throw new InvalidOperationException();
-            }
-
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<>))
-            {
-                type = UoFCache.CachedReadOnlyRepos.GetValueOrDefault(entityType);
-                name = type?.FullName ?? throw new InvalidOperationException();
-            }
-            else
-            {
-                if (!UoFCache.CachedRepositoryInterfaceImplTypes.TryGetValue(type, out var implType))
-                    throw new InvalidOperationException($"Couldn't find a non-abstract implementation of {name}");
-                type = implType;
-                name = implType.FullName ?? throw new InvalidOperationException();
+                case true when type.GetGenericTypeDefinition() == typeof(IRepository<>):
+                    type = UoFCache.CachedCrudRepos.GetValueOrDefault(entityType);
+                    name = type?.FullName ?? throw new InvalidOperationException();
+                    break;
+                case true when type.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<>):
+                    type = UoFCache.CachedReadOnlyRepos.GetValueOrDefault(entityType);
+                    name = type?.FullName ?? throw new InvalidOperationException();
+                    break;
+                default:
+                {
+                    if (!UoFCache.CachedRepositoryInterfaceImplTypes.TryGetValue(type, out var implType))
+                        throw new InvalidOperationException($"Couldn't find a non-abstract implementation of {name}");
+                    type = implType;
+                    name = implType.FullName ?? throw new InvalidOperationException();
+                    break;
+                }
             }
         }
 
