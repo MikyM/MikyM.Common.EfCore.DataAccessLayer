@@ -13,7 +13,9 @@ public interface IEfDbContext : IDisposable, IAsyncDisposable
 {
     IQueryable<TEntity> ExecuteRawSql<TEntity>(string sql, params object[] parameters) where TEntity : class;
     int ExecuteRawSql(string sql);
+    int ExecuteRawSql(string sql, params object[] parameters);
     Task<int> ExecuteRawSqlAsync(string sql);
+    Task<int> ExecuteRawSqlAsync(string sql, params object[] parameters);
     DatabaseFacade Database { get; }
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
     TEntity? FindTracked<TEntity>(params object[] keyValues) where TEntity : class;

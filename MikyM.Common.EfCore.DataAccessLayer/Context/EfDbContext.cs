@@ -32,9 +32,15 @@ public abstract class EfDbContext : DbContext, IEfDbContext
 
     public int ExecuteRawSql(string sql)
         => Database.ExecuteSqlRaw(sql);
+    
+    public int ExecuteRawSql(string sql, params object[] parameters)
+        => Database.ExecuteSqlRaw(sql, parameters);
 
     public async Task<int> ExecuteRawSqlAsync(string sql)
         => await Database.ExecuteSqlRawAsync(sql);
+    
+    public async Task<int> ExecuteRawSqlAsync(string sql, params object[] parameters)
+        => await Database.ExecuteSqlRawAsync(sql, parameters);
 
     public TEntity? FindTracked<TEntity>(params object[] keyValues) where TEntity : class
         => DbContextExtensions.FindTracked<TEntity>(this, keyValues);
