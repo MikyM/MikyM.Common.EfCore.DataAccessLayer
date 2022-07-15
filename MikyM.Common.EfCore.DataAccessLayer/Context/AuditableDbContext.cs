@@ -70,6 +70,8 @@ public abstract class AuditableDbContext : EfDbContext
         return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
+    /// <inheritdoc/>
+    /// <remarks>Handles audit logs and <see cref="Entity.CreatedAt"/>, <see cref="Entity.UpdatedAt"/> properties.</remarks>
     protected override void OnBeforeSaveChanges(string? userId = null)
     {
         ChangeTracker.DetectChanges();
