@@ -1,7 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Reflection;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 using MikyM.Common.DataAccessLayer.Repositories;

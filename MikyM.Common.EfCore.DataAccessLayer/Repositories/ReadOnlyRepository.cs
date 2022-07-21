@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using MikyM.Common.Domain.Entities;
+using MikyM.Common.Domain.Entities.Base;
 using MikyM.Common.EfCore.DataAccessLayer.Context;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
@@ -10,7 +11,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// Read-only repository
 /// </summary>
 /// <inheritdoc cref="IReadOnlyRepository{TEntity}"/>
-public class ReadOnlyRepository<TEntity> : IReadOnlyRepository<TEntity> where TEntity : AggregateRootEntity
+public class ReadOnlyRepository<TEntity> : IReadOnlyRepository<TEntity> where TEntity :  class, IAggregateRootEntity
 {
     /// <summary>
     /// Entity type that this repository was created for

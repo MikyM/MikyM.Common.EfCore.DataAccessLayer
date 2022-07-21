@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using MikyM.Common.DataAccessLayer.Repositories;
 using MikyM.Common.Domain.Entities;
+using MikyM.Common.Domain.Entities.Base;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
@@ -9,7 +10,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// Read-only repository
 /// </summary>
 /// <typeparam name="TEntity">Entity that derives from <see cref="AggregateRootEntity"/></typeparam>
-public interface IReadOnlyRepository<TEntity> : IRepositoryBase where TEntity : AggregateRootEntity
+public interface IReadOnlyRepository<TEntity> : IRepositoryBase where TEntity : class, IAggregateRootEntity
 {
     /// <summary>
     /// Gets an entity based on given primary key values

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using MikyM.Common.Domain.Entities;
+using MikyM.Common.Domain.Entities.Base;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 
@@ -7,7 +8,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// Repository
 /// </summary>
 /// <typeparam name="TEntity">Entity that derives from <see cref="AggregateRootEntity"/></typeparam>
-public interface IRepository<TEntity> : IReadOnlyRepository<TEntity> where TEntity : AggregateRootEntity
+public interface IRepository<TEntity> : IReadOnlyRepository<TEntity> where TEntity : class, IAggregateRootEntity
 {
     /// <summary>
     /// Adds an entity

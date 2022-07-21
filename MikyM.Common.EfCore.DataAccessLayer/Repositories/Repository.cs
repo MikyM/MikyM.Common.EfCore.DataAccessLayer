@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using MikyM.Common.Domain.Entities;
+using MikyM.Common.Domain.Entities.Base;
 using MikyM.Common.EfCore.DataAccessLayer.Context;
 using MikyM.Common.EfCore.DataAccessLayer.Exceptions;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
@@ -11,7 +12,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// </summary>
 /// <inheritdoc cref="IRepository{TEntity}"/>
 public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEntity>
-    where TEntity : AggregateRootEntity
+    where TEntity : class, IAggregateRootEntity
 {
     internal Repository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator) : base(context,
         specificationEvaluator)
@@ -135,7 +136,7 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
         DetachRoot(entity);
     }
 
-    private void DetachRoot(AggregateRootEntity entity)
+    private void DetachRoot(IAggregateRootEntity entity)
     {
         foreach (var entry in Context.Entry(entity).Navigations)
         {
