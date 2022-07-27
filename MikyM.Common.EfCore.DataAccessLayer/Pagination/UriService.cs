@@ -5,12 +5,13 @@ using MikyM.Common.EfCore.DataAccessLayer.Filters;
 namespace MikyM.Common.EfCore.DataAccessLayer.Pagination;
 
 /// <inheritdoc />
+[PublicAPI]
 public class UriService : IUriService
 {
     private readonly string _baseUri;
 
     /// <summary>
-    /// Creates new instance of the Uri service
+    /// Creates new instance of the Uri service.
     /// </summary>
     /// <param name="baseUri"></param>
     public UriService(string baseUri)

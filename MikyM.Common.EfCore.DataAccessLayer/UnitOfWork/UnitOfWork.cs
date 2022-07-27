@@ -10,18 +10,15 @@ using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.UnitOfWork;
 
-/// <summary>
-/// Unit of work implementation
-/// </summary>
 /// <inheritdoc cref="IUnitOfWork{TContext}"/>
 public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext : IEfDbContext
 {
     /// <summary>
-    /// Inner <see cref="ISpecificationEvaluator"/>
+    /// Inner <see cref="ISpecificationEvaluator"/>.
     /// </summary>
     private readonly ISpecificationEvaluator _specificationEvaluator;
     /// <summary>
-    /// Configuration
+    /// Configuration.
     /// </summary>
     private readonly IOptions<EfCoreDataAccessConfiguration> _options;
 
@@ -30,24 +27,24 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
     // ReSharper disable once InconsistentNaming
 
     /// <summary>
-    /// Repository cache
+    /// Repository cache.
     /// </summary>
     private ConcurrentDictionary<string, Lazy<IRepositoryBase>>? _repositories;
     /// <summary>
-    /// Repository entity type cache
+    /// Repository entity type cache.
     /// </summary>
     private ConcurrentDictionary<string, string>? _entityTypesOfRepositories;
 
     /// <summary>
-    /// Inner <see cref="IDbContextTransaction"/>
+    /// Inner <see cref="IDbContextTransaction"/>.
     /// </summary>
     private IDbContextTransaction? _transaction;
 
     /// <summary>
-    /// Creates a new instance of <see cref="UnitOfWork{TContext}"/>
+    /// Creates a new instance of <see cref="UnitOfWork{TContext}"/>.
     /// </summary>
-    /// <param name="context"><see cref="DbContext"/> to be used</param>
-    /// <param name="specificationEvaluator">Specification evaluator to be used</param>
+    /// <param name="context"><see cref="DbContext"/> to be used.</param>
+    /// <param name="specificationEvaluator">Specification evaluator to be used.</param>
     public UnitOfWork(TContext context, ISpecificationEvaluator specificationEvaluator, IOptions<EfCoreDataAccessConfiguration> options)
     {
         Context = context;
@@ -60,7 +57,7 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
 
     /// <inheritdoc />
     public async Task UseTransactionAsync()
-        => _transaction ??= await Context.Database.BeginTransactionAsync();
+        => _transaction ??= await Context.Database.BeginTransactionAsync().ConfigureAwait(false);
 
     /// <inheritdoc />
     public TRepository GetRepository<TRepository>() where TRepository : class, IRepositoryBase
@@ -127,7 +124,7 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
     /// <inheritdoc />
     public async Task RollbackAsync()
     {
-        if (_transaction is not null) await _transaction.RollbackAsync();
+        if (_transaction is not null) await _transaction.RollbackAsync().ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -136,8 +133,8 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
         if (_options.Value.OnBeforeSaveChangesActions is not null &&
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
             await action.Invoke(this);
-        _ = await Context.SaveChangesAsync();
-        if (_transaction is not null) await _transaction.CommitAsync();
+        _ = await Context.SaveChangesAsync().ConfigureAwait(false);
+        if (_transaction is not null) await _transaction.CommitAsync().ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -148,11 +145,11 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
             await action.Invoke(this);
 
         if (Context is AuditableDbContext auditableDbContext)
-            _ = await auditableDbContext.SaveChangesAsync(userId);
+            _ = await auditableDbContext.SaveChangesAsync(userId).ConfigureAwait(false);
         else
-            _ = await Context.SaveChangesAsync();
+            _ = await Context.SaveChangesAsync().ConfigureAwait(false);
         
-        if (_transaction is not null) await _transaction.CommitAsync();
+        if (_transaction is not null) await _transaction.CommitAsync().ConfigureAwait(false);
     }
     
     /// <inheritdoc />
@@ -162,8 +159,8 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
             await action.Invoke(this);
 
-        int result = await Context.SaveChangesAsync();
-        if (_transaction is not null) await _transaction.CommitAsync();
+        int result = await Context.SaveChangesAsync().ConfigureAwait(false);
+        if (_transaction is not null) await _transaction.CommitAsync().ConfigureAwait(false);
         return result;
     }
 
@@ -176,11 +173,11 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
 
         int result;
         if (Context is AuditableDbContext auditableDbContext)
-            result = await auditableDbContext.SaveChangesAsync(userId);
+            result = await auditableDbContext.SaveChangesAsync(userId).ConfigureAwait(false);
         else
-            result = await Context.SaveChangesAsync();
+            result = await Context.SaveChangesAsync().ConfigureAwait(false);
 
-        if (_transaction is not null) await _transaction.CommitAsync();
+        if (_transaction is not null) await _transaction.CommitAsync().ConfigureAwait(false);
         return result;
     }
 

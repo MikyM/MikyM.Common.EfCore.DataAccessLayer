@@ -9,8 +9,9 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace MikyM.Common.EfCore.DataAccessLayer.Context;
 
 /// <summary>
-/// Base EF Context interface.
+/// Base definition of a EF database context.
 /// </summary>
+[PublicAPI]
 public interface IEfDbContext : IDisposable, IAsyncDisposable
 {
     /// <summary>

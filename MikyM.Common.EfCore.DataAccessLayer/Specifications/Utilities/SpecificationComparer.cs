@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.Query;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.Specifications.Utilities;

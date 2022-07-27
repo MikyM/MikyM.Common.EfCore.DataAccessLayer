@@ -11,6 +11,7 @@ using MikyM.Common.EfCore.DataAccessLayer.Specifications.Validators;
 namespace MikyM.Common.EfCore.DataAccessLayer.Specifications;
 
 /// <inheritdoc cref="ISpecification{T,TResult}" />
+[PublicAPI]
 public
     class Specification<T, TResult> : Specification<T>, ISpecification<T, TResult>
     where T : class where TResult : class

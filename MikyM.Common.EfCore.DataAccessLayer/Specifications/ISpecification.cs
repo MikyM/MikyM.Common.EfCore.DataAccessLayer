@@ -13,6 +13,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Specifications;
 /// </summary>
 /// <typeparam name="T">The type being queried against.</typeparam>
 /// <typeparam name="TResult">The type of the result to project results to with Automapper's ProjectTo.</typeparam>
+[PublicAPI]
 public interface ISpecification<T, TResult> : ISpecification<T> where T : class
 {
     /// <summary>

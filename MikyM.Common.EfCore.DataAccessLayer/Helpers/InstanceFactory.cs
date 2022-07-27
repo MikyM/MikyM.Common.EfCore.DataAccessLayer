@@ -5,6 +5,9 @@ using System.Reflection;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.Helpers;
 
+/// <summary>
+/// Factory for repositories.
+/// </summary>
 internal static class InstanceFactory
 {
   private delegate object? CreateDelegate(Type type, object? arg1, object? arg2, object? arg3);

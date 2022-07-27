@@ -1,15 +1,16 @@
 ﻿using System.Threading;
-using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Options;
+using MikyM.Common.Domain.Entities;
 using MikyM.Common.EfCore.DataAccessLayer.Helpers;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.Context;
 
 /// <summary>
-/// Base <see cref="DbContext"/>.
+/// Base definition of a EF database context.
 /// </summary>
 /// <inheritdoc cref="DbContext"/>
+[PublicAPI]
 public abstract class EfDbContext : DbContext, IEfDbContext
 {
     /// <summary>
@@ -59,15 +60,34 @@ public abstract class EfDbContext : DbContext, IEfDbContext
     /// </summary>
     /// <typeparam name="TEntity">Entity type</typeparam>
     /// <returns></returns>
-    /// <exception cref="InvalidOperationException">Throw when couldn't find the entity type or the table name</exception>
+    /// <exception cref="InvalidOperationException">Throw when couldn't find the entity type or the table name.</exception>
     public string? GetTableName<TEntity>() where TEntity : class
         => Model.FindEntityType(typeof(TEntity))?.GetTableName() ??
            throw new InvalidOperationException($"Couldn't find table name or entity type {typeof(TEntity).Name}");
-    
+
     /// <summary>
     /// Executes an action before executing SaveChanges.
     /// </summary>
     /// <param name="userId">User responsible for the changes if any.</param>
     [PublicAPI]
-    protected abstract void OnBeforeSaveChanges(string? userId = null);
+    protected virtual void OnBeforeSaveChanges(string? userId = null)
+    {
+        ChangeTracker.DetectChanges();
+        foreach (var entry in ChangeTracker.Entries().ToList())
+        {
+            if (entry.Entity is Entity entity)
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        entity.CreatedAt = DateTime.UtcNow;
+                        entry.Property("CreatedAt").IsModified = true;
+                        break;
+                    case EntityState.Modified:
+                        entity.UpdatedAt = DateTime.UtcNow;
+                        entry.Property("UpdatedAt").IsModified = true;
+                        entry.Property("CreatedAt").IsModified = false;
+                        break;
+                }
+        }
+    }
 }

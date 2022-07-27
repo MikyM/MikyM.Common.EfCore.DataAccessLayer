@@ -3,14 +3,15 @@
 /// <summary>
 /// Data transfer object for <see cref="PaginationFilter"/>
 /// </summary>
+[PublicAPI]
 public class PaginationFilterDto
 {
     /// <summary>
-    /// Page number
+    /// Page number.
     /// </summary>
     public int PageNumber { get; set; }
     /// <summary>
-    /// Page size
+    /// Page size.
     /// </summary>
     public int PageSize { get; set; }
 }

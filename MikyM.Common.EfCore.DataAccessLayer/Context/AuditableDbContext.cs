@@ -6,13 +6,14 @@ using MikyM.Common.Domain.Entities;
 namespace MikyM.Common.EfCore.DataAccessLayer.Context;
 
 /// <summary>
-/// Auditable <see cref="DbContext"/>
+/// Auditable <see cref="DbContext"/>.
 /// </summary>
 /// <inheritdoc cref="DbContext"/>
+[PublicAPI]
 public abstract class AuditableDbContext : EfDbContext
 {
     /// <summary>
-    /// Id of the user responsible for changes done within this context
+    /// Id of the user responsible for changes done within this context.
     /// </summary>
     protected string? AuditUserId { get; set; }
 
@@ -28,18 +29,18 @@ public abstract class AuditableDbContext : EfDbContext
 
     // ReSharper disable once MemberCanBePrivate.Global
     /// <summary>
-    /// Audit log <see cref="DbSet{TEntity}"/>
+    /// Audit log <see cref="DbSet{TEntity}"/>.
     /// </summary>
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
 
 
     /// <summary>
-    /// Prior to calling base SaveChanges creates an audit log entry with user Id information
+    /// Prior to calling base SaveChanges creates an audit log entry with user Id information.
     /// </summary>
-    /// <param name="auditUserId">Id of the user responsible for the change</param>
-    /// <param name="acceptAllChangesOnSuccess">Whether to accept all changes on success</param>
-    /// <param name="cancellationToken">A cancellation token if any</param>
-    /// <returns>Number of affected entries</returns>
+    /// <param name="auditUserId">Id of the user responsible for the change.</param>
+    /// <param name="acceptAllChangesOnSuccess">Whether to accept all changes on success.</param>
+    /// <param name="cancellationToken">A cancellation token if any.</param>
+    /// <returns>Number of affected entries.</returns>
     public virtual async Task<int> SaveChangesAsync(string? auditUserId, bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
         AuditUserId = auditUserId;
@@ -47,11 +48,11 @@ public abstract class AuditableDbContext : EfDbContext
     }
 
     /// <summary>
-    /// Prior to calling base SaveChanges creates an audit log entry with user Id information
+    /// Prior to calling base SaveChanges creates an audit log entry with user Id information.
     /// </summary>
-    /// <param name="auditUserId">Id of the user responsible for the change</param>
-    /// <param name="cancellationToken">A cancellation token if any</param>
-    /// <returns>Number of affected entries</returns>
+    /// <param name="auditUserId">Id of the user responsible for the change.</param>
+    /// <param name="cancellationToken">A cancellation token if any.</param>
+    /// <returns>Number of affected entries.</returns>
     public virtual async Task<int> SaveChangesAsync(string? auditUserId, CancellationToken cancellationToken = default)
     {
         AuditUserId = auditUserId;
@@ -61,7 +62,7 @@ public abstract class AuditableDbContext : EfDbContext
 
     /// <inheritdoc />
     /// <remarks>
-    /// Creates an audit log entry
+    /// Creates an audit log entry.
     /// </remarks>
     public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default)
@@ -76,7 +77,7 @@ public abstract class AuditableDbContext : EfDbContext
     {
         ChangeTracker.DetectChanges();
         var auditEntries = new List<AuditEntry>();
-        foreach (var entry in ChangeTracker.Entries())
+        foreach (var entry in ChangeTracker.Entries().ToList())
         {
             if (entry.Entity is AuditLog || entry.State is EntityState.Detached or EntityState.Unchanged)
                 continue;
@@ -84,20 +85,6 @@ public abstract class AuditableDbContext : EfDbContext
             var auditEntry = new AuditEntry(entry) { TableName = entry.Entity.GetType().Name, UserId = userId };
 
             auditEntries.Add(auditEntry);
-
-            if (entry.Entity is Entity entity)
-                switch (entry.State)
-                {
-                    case EntityState.Added:
-                        entity.CreatedAt = DateTime.UtcNow;
-                        entry.Property("CreatedAt").IsModified = true;
-                        break;
-                    case EntityState.Modified:
-                        entity.UpdatedAt = DateTime.UtcNow;
-                        entry.Property("UpdatedAt").IsModified = true;
-                        entry.Property("CreatedAt").IsModified = false;
-                        break;
-                }
 
             foreach (var property in entry.Properties)
             {
@@ -136,5 +123,7 @@ public abstract class AuditableDbContext : EfDbContext
         }
 
         foreach (var auditEntry in auditEntries) AuditLogs.Add(auditEntry.ToAudit());
+        
+        base.OnBeforeSaveChanges(userId);
     }
 }

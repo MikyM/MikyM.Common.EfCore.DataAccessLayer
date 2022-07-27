@@ -1,16 +1,25 @@
 ﻿namespace MikyM.Common.EfCore.DataAccessLayer.Filters;
 
 /// <summary>
-/// Pagination filter
+/// Pagination filter.
 /// </summary>
+[PublicAPI]
 public class PaginationFilter
 {
+    /// <summary>
+    /// Base constructor.
+    /// </summary>
     public PaginationFilter()
     {
         PageNumber = 1;
         PageSize = 10;
     }
 
+    /// <summary>
+    /// Base constructor.
+    /// </summary>
+    /// <param name="pageNumber">Page number.</param>
+    /// <param name="pageSize">Page size.</param>
     public PaginationFilter(int pageNumber, int pageSize)
     {
         PageNumber = pageNumber < 1 ? 1 : pageNumber;
@@ -18,11 +27,11 @@ public class PaginationFilter
     }
 
     /// <summary>
-    /// Page number
+    /// Page number.
     /// </summary>
     public int PageNumber { get; set; }
     /// <summary>
-    /// Page size
+    /// Page size.
     /// </summary>
     public int PageSize { get; set; }
 }

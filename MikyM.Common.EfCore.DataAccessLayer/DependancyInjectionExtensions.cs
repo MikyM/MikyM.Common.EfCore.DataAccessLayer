@@ -1,13 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using Autofac;
-using Autofac.Extensions.DependencyInjection;
-using IdGen;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using MikyM.Autofac.Extensions;
 using MikyM.Common.DataAccessLayer;
-using MikyM.Common.Domain;
 using MikyM.Common.EfCore.DataAccessLayer.Pagination;
 using MikyM.Common.EfCore.DataAccessLayer.Repositories;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications;
@@ -18,8 +15,9 @@ using MikyM.Common.EfCore.DataAccessLayer.UnitOfWork;
 namespace MikyM.Common.EfCore.DataAccessLayer;
 
 /// <summary>
-/// DI extensions for <see cref="ContainerBuilder"/>
+/// DI extensions for <see cref="ContainerBuilder"/>.
 /// </summary>
+[PublicAPI]
 public static class DependancyInjectionExtensions
 {
     /// <summary>
@@ -98,10 +96,10 @@ public static class DependancyInjectionExtensions
     }
 
     /// <summary>
-    /// Registers services required for pagination with the <see cref="ContainerBuilder"/>
+    /// Registers services required for pagination with the <see cref="ContainerBuilder"/>.
     /// </summary>
-    /// <param name="options">Data access configuration</param>
-    /// <returns>Current instance of the <see cref="EfCoreDataAccessConfiguration"/></returns>
+    /// <param name="options">Data access configuration.</param>
+    /// <returns>Current instance of the <see cref="EfCoreDataAccessConfiguration"/>.</returns>
     public static EfCoreDataAccessConfiguration AddPaginationServices(this EfCoreDataAccessConfiguration options)
     {
         options.Builder.RegisterType<HttpContextAccessor>().As<IHttpContextAccessor>().SingleInstance();
@@ -121,8 +119,8 @@ public static class DependancyInjectionExtensions
     /// <summary>
     /// Adds a given custom evaluator that implements <see cref="IEvaluator"/> interface.
     /// </summary>
-    /// <typeparam name="TEvaluator">Type to register</typeparam>
-    /// <returns>Current <see cref="EfCoreDataAccessConfiguration"/> instance</returns>
+    /// <typeparam name="TEvaluator">Type to register.</typeparam>
+    /// <returns>Current <see cref="EfCoreDataAccessConfiguration"/> instance.</returns>
     public static EfCoreDataAccessConfiguration AddEvaluator<TEvaluator>(this EfCoreDataAccessConfiguration efCoreDataAccessOptions) where TEvaluator : class, IEvaluator
     {
         efCoreDataAccessOptions.Builder.RegisterType(typeof(TEvaluator))
@@ -136,9 +134,9 @@ public static class DependancyInjectionExtensions
     /// <summary>
     /// Adds a given custom evaluator that implements <see cref="IEvaluator"/> interface.
     /// </summary>
-    /// <param name="efCoreDataAccessOptions"></param>
-    /// <param name="evaluator">Type of the custom evaluator</param>
-    /// <returns>Current <see cref="EfCoreDataAccessConfiguration"/> instance</returns>
+    /// <param name="efCoreDataAccessOptions">.</param>
+    /// <param name="evaluator">Type of the custom evaluator.</param>
+    /// <returns>Current <see cref="EfCoreDataAccessConfiguration"/> instance.</returns>
     public static EfCoreDataAccessConfiguration AddEvaluator(this EfCoreDataAccessConfiguration efCoreDataAccessOptions, Type evaluator)
     {
         if (evaluator.GetInterface(nameof(IEvaluator)) is null)
@@ -155,7 +153,7 @@ public static class DependancyInjectionExtensions
     /// <summary>
     /// Adds all evaluators that implement <see cref="IInMemoryEvaluator"/> from all assemblies.
     /// </summary>
-    /// <returns>Current <see cref="EfCoreDataAccessConfiguration"/> instance</returns>
+    /// <returns>Current <see cref="EfCoreDataAccessConfiguration"/> instance.</returns>
     public static EfCoreDataAccessConfiguration AddInMemoryEvaluators(this EfCoreDataAccessConfiguration efCoreDataAccessOptions)
     {
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -173,7 +171,7 @@ public static class DependancyInjectionExtensions
     /// <summary>
     /// Adds all validators that implement <see cref="IValidator"/> from all assemblies.
     /// </summary>
-    /// <returns>Current <see cref="EfCoreDataAccessConfiguration"/> instance</returns>
+    /// <returns>Current <see cref="EfCoreDataAccessConfiguration"/> instance.</returns>
     public static EfCoreDataAccessConfiguration AddValidators(this EfCoreDataAccessConfiguration efCoreDataAccessOptions)
     {
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
@@ -191,7 +189,7 @@ public static class DependancyInjectionExtensions
     /// <summary>
     /// Adds all evaluators that implement <see cref="IEvaluator"/> from all assemblies.
     /// </summary>
-    /// <returns>Current <see cref="EfCoreDataAccessConfiguration"/> instance</returns>
+    /// <returns>Current <see cref="EfCoreDataAccessConfiguration"/> instance.</returns>
     public static EfCoreDataAccessConfiguration AddEvaluators(this EfCoreDataAccessConfiguration efCoreDataAccessOptions)
     {
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
