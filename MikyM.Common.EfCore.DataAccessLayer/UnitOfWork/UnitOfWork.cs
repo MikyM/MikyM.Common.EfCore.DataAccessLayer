@@ -138,7 +138,7 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
     }
 
     /// <inheritdoc />
-    public async Task CommitAsync(string? userId)
+    public async Task CommitAsync(string userId)
     {
         if (_options.Value.OnBeforeSaveChangesActions is not null &&
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
@@ -165,7 +165,7 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
     }
 
     /// <inheritdoc />
-    public async Task<int> CommitWithCountAsync(string? userId)
+    public async Task<int> CommitWithCountAsync(string userId)
     {
         if (_options.Value.OnBeforeSaveChangesActions is not null &&
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))

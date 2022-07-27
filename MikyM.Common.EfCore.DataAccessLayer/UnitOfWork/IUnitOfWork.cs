@@ -17,7 +17,7 @@ public interface IUnitOfWork : IUnitOfWorkBase
     
     /// <inheritdoc cref="IUnitOfWorkBase.CommitAsync(string)"/>
     /// <returns>Number of affected rows.</returns>
-    Task<int> CommitWithCountAsync(string? auditUserId);
+    Task<int> CommitWithCountAsync(string auditUserId);
 
     /// <inheritdoc cref="IUnitOfWorkBase.CommitAsync()"/>
     /// <returns>Number of affected rows.</returns>

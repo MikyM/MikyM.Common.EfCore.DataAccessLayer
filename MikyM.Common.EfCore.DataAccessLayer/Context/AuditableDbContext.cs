@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.Extensions.Options;
 using MikyM.Common.Domain.Entities;
 
@@ -41,10 +42,10 @@ public abstract class AuditableDbContext : EfDbContext
     /// <param name="acceptAllChangesOnSuccess">Whether to accept all changes on success.</param>
     /// <param name="cancellationToken">A cancellation token if any.</param>
     /// <returns>Number of affected entries.</returns>
-    public virtual async Task<int> SaveChangesAsync(string? auditUserId, bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    public virtual async Task<int> SaveChangesAsync(string auditUserId, bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
         AuditUserId = auditUserId;
-        return await SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        return await SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -53,36 +54,27 @@ public abstract class AuditableDbContext : EfDbContext
     /// <param name="auditUserId">Id of the user responsible for the change.</param>
     /// <param name="cancellationToken">A cancellation token if any.</param>
     /// <returns>Number of affected entries.</returns>
-    public virtual async Task<int> SaveChangesAsync(string? auditUserId, CancellationToken cancellationToken = default)
+    public virtual async Task<int> SaveChangesAsync(string auditUserId, CancellationToken cancellationToken = default)
     {
         AuditUserId = auditUserId;
-        return await SaveChangesAsync(true, cancellationToken);
+        return await SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
-
-    /// <inheritdoc />
-    /// <remarks>
-    /// Creates an audit log entry.
-    /// </remarks>
-    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
-        CancellationToken cancellationToken = default)
-    {
-        if (!Config.Value.DisableOnBeforeSaveChanges) OnBeforeSaveChanges(AuditUserId);
-        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-    }
 
     /// <inheritdoc/>
     /// <remarks>Handles audit logs and <see cref="Entity.CreatedAt"/>, <see cref="Entity.UpdatedAt"/> properties.</remarks>
-    protected override void OnBeforeSaveChanges(string? userId = null)
+    protected override void OnBeforeSaveChanges(List<EntityEntry>? detectedEntries = null)
     {
         ChangeTracker.DetectChanges();
+        var detectedChanges = ChangeTracker.Entries().ToList();
+        
         var auditEntries = new List<AuditEntry>();
-        foreach (var entry in ChangeTracker.Entries().ToList())
+        foreach (var entry in detectedChanges)
         {
             if (entry.Entity is AuditLog || entry.State is EntityState.Detached or EntityState.Unchanged)
                 continue;
 
-            var auditEntry = new AuditEntry(entry) { TableName = entry.Entity.GetType().Name, UserId = userId };
+            var auditEntry = new AuditEntry(entry) { TableName = entry.Entity.GetType().Name, UserId = AuditUserId };
 
             auditEntries.Add(auditEntry);
 
@@ -122,8 +114,9 @@ public abstract class AuditableDbContext : EfDbContext
             }
         }
 
-        foreach (var auditEntry in auditEntries) AuditLogs.Add(auditEntry.ToAudit());
+        foreach (var auditEntry in auditEntries) 
+            AuditLogs.Add(auditEntry.ToAudit());
         
-        base.OnBeforeSaveChanges(userId);
+        base.OnBeforeSaveChanges(detectedChanges);
     }
 }

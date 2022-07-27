@@ -108,7 +108,7 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
     /// <inheritdoc />
     public virtual async Task DisableAsync(long id)
     {
-        var entity = await GetAsync(id);
+        var entity = await GetAsync(id).ConfigureAwait(false);
         
         if (entity is not IDisableableEntity)
             throw new InvalidOperationException("Can't disable an entity that isn't disableable.");

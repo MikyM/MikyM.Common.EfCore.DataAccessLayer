@@ -1,4 +1,6 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Options;
 using MikyM.Common.Domain.Entities;
@@ -17,6 +19,11 @@ public abstract class EfDbContext : DbContext, IEfDbContext
     /// Configuration.
     /// </summary>
     protected readonly IOptions<EfCoreDataAccessConfiguration> Config;
+
+    /// <summary>
+    /// Detected changes. This will be null prior to calling SaveChangesAsync.
+    /// </summary>
+    protected List<EntityEntry>? DetectedChanges;
 
     /// <inheritdoc />
     protected EfDbContext(DbContextOptions options) : base(options)
@@ -64,16 +71,41 @@ public abstract class EfDbContext : DbContext, IEfDbContext
     public string? GetTableName<TEntity>() where TEntity : class
         => Model.FindEntityType(typeof(TEntity))?.GetTableName() ??
            throw new InvalidOperationException($"Couldn't find table name or entity type {typeof(TEntity).Name}");
+    
+    /// <inheritdoc cref="DbContext.SaveChangesAsync(bool,System.Threading.CancellationToken)" />
+    /// <remarks>
+    /// Executes <see cref="OnBeforeSaveChanges"/> if not disabled.
+    /// </remarks>
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess,
+        CancellationToken cancellationToken = default)
+    {
+        if (!Config.Value.DisableOnBeforeSaveChanges) 
+            OnBeforeSaveChanges();
+        
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc cref="DbContext.SaveChangesAsync(System.Threading.CancellationToken)" />
+    /// <remarks>
+    /// Executes <see cref="OnBeforeSaveChanges"/> if not disabled.
+    /// </remarks>
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        if (!Config.Value.DisableOnBeforeSaveChanges) 
+            OnBeforeSaveChanges();
+        
+        return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+    }
 
     /// <summary>
     /// Executes an action before executing SaveChanges.
     /// </summary>
-    /// <param name="userId">User responsible for the changes if any.</param>
-    [PublicAPI]
-    protected virtual void OnBeforeSaveChanges(string? userId = null)
+    protected virtual void OnBeforeSaveChanges(List<EntityEntry>? detectedEntries = null)
     {
-        ChangeTracker.DetectChanges();
-        foreach (var entry in ChangeTracker.Entries().ToList())
+        if (detectedEntries is null)
+            ChangeTracker.DetectChanges();
+        
+        foreach (var entry in detectedEntries ?? ChangeTracker.Entries().ToList())
         {
             if (entry.Entity is Entity entity)
                 switch (entry.State)
