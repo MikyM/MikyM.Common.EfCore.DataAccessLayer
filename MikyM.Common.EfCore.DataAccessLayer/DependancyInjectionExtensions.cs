@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using MikyM.Autofac.Extensions;
 using MikyM.Common.DataAccessLayer;
+using MikyM.Common.EfCore.DataAccessLayer.Context;
 using MikyM.Common.EfCore.DataAccessLayer.Pagination;
 using MikyM.Common.EfCore.DataAccessLayer.Repositories;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications;
@@ -202,6 +203,45 @@ public static class DependancyInjectionExtensions
                 .As<IEvaluator>()
                 .FindConstructorsWith(new AllConstructorsFinder())
                 .SingleInstance();
+        }
+
+        return efCoreDataAccessOptions;
+    }
+    
+    /// <summary>
+    /// Adds the interface of a database context as a service.
+    /// </summary>
+    /// <returns>Current <see cref="EfCoreDataAccessConfiguration"/> instance.</returns>
+    public static EfCoreDataAccessConfiguration
+        AddDbContext<TContextInterface, TContextImplementation>(
+            this EfCoreDataAccessConfiguration efCoreDataAccessOptions, Lifetime lifetime = Lifetime.InstancePerLifetimeScope) where TContextInterface : class, IEfDbContext
+        where TContextImplementation : EfDbContext, TContextInterface
+    {
+
+        switch (lifetime)
+        {
+            case Lifetime.SingleInstance:
+                efCoreDataAccessOptions.Builder.Register(x => x.Resolve<TContextImplementation>()).As<TContextInterface>()
+                    .SingleInstance();
+                break;
+            case Lifetime.InstancePerRequest:
+                efCoreDataAccessOptions.Builder.Register(x => x.Resolve<TContextImplementation>()).As<TContextInterface>()
+                    .InstancePerRequest();
+                break;
+            case Lifetime.InstancePerLifetimeScope:
+                efCoreDataAccessOptions.Builder.Register(x => x.Resolve<TContextImplementation>()).As<TContextInterface>()
+                    .InstancePerLifetimeScope();
+                break;
+            case Lifetime.InstancePerMatchingLifetimeScope:
+                throw new NotSupportedException();
+            case Lifetime.InstancePerDependancy:
+                efCoreDataAccessOptions.Builder.Register(x => x.Resolve<TContextImplementation>()).As<TContextInterface>()
+                    .InstancePerDependency();
+                break;
+            case Lifetime.InstancePerOwned:
+                throw new NotSupportedException();
+            default:
+                throw new ArgumentOutOfRangeException(nameof(lifetime), lifetime, null);
         }
 
         return efCoreDataAccessOptions;
