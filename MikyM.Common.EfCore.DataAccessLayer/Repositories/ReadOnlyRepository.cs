@@ -13,7 +13,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// </summary>
 /// <inheritdoc cref="IReadOnlyRepository{TEntity}"/>
 [PublicAPI]
-public class ReadOnlyRepository<TEntity> : IReadOnlyRepository<TEntity> where TEntity :  class, IAggregateRootEntity
+public class ReadOnlyRepository<TEntity> : IReadOnlyRepository<TEntity> where TEntity :  class, IEntityBase
 {
     /// <inheritdoc />
     public Type EntityType => typeof(TEntity);

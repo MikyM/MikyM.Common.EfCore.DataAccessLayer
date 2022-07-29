@@ -234,7 +234,7 @@ public static class DependancyInjectionExtensions
                 break;
             case Lifetime.InstancePerMatchingLifetimeScope:
                 throw new NotSupportedException();
-            case Lifetime.InstancePerDependancy:
+            case Lifetime.InstancePerDependency:
                 efCoreDataAccessOptions.Builder.Register(x => x.Resolve<TContextImplementation>()).As<TContextInterface>()
                     .InstancePerDependency();
                 break;

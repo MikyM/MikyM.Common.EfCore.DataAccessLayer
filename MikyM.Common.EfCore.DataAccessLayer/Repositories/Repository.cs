@@ -14,7 +14,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// <inheritdoc cref="IRepository{TEntity}"/>
 [PublicAPI]
 public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEntity>
-    where TEntity : class, IAggregateRootEntity
+    where TEntity : class, IEntityBase
 {
     internal Repository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator) : base(context,
         specificationEvaluator)
@@ -151,13 +151,13 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
         DetachRoot(entity);
     }
 
-    private void DetachRoot(IAggregateRootEntity entity)
+    private void DetachRoot(IEntityBase entity)
     {
         foreach (var entry in Context.Entry(entity).Navigations)
         {
             switch (entry.CurrentValue)
             {
-                case IEnumerable<AggregateRootEntity> navs:
+                case IEnumerable<Entity> navs:
                 {
                     var list = navs.ToList();
 
@@ -174,7 +174,7 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
                     
                     break;
                 }
-                case AggregateRootEntity nav:
+                case Entity nav:
                 {
                     var singularEntry = Context.Entry(nav);
                     if (singularEntry.State is EntityState.Detached)

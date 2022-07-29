@@ -11,9 +11,9 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// <summary>
 /// Read-only repository.
 /// </summary>
-/// <typeparam name="TEntity">Entity that derives from <see cref="AggregateRootEntity"/>.</typeparam>
+/// <typeparam name="TEntity">Entity that derives from <see cref="Entity"/>.</typeparam>
 [PublicAPI]
-public interface IReadOnlyRepository<TEntity> : IRepositoryBase where TEntity : class, IAggregateRootEntity
+public interface IReadOnlyRepository<TEntity> : IRepositoryBase where TEntity : class, IEntityBase
 {
     /// <summary>
     /// Current <see cref="IEfDbContext"/>.

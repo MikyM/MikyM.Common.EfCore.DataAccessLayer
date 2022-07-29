@@ -7,9 +7,9 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// <summary>
 /// Repository.
 /// </summary>
-/// <typeparam name="TEntity">Entity that derives from <see cref="AggregateRootEntity"/>.</typeparam>
+/// <typeparam name="TEntity">Entity that derives from <see cref="Entity"/>.</typeparam>
 [PublicAPI]
-public interface IRepository<TEntity> : IReadOnlyRepository<TEntity> where TEntity : class, IAggregateRootEntity
+public interface IRepository<TEntity> : IReadOnlyRepository<TEntity> where TEntity : class, IEntityBase
 {
     /// <summary>
     /// Adds an entity.

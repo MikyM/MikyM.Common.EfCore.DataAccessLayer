@@ -2,6 +2,7 @@
 using System.Reflection;
 using MikyM.Common.DataAccessLayer.Repositories;
 using MikyM.Common.Domain.Entities;
+using MikyM.Common.Domain.Entities.Base;
 using MikyM.Common.EfCore.DataAccessLayer.Repositories;
 using MikyM.Common.Utilities.Extensions;
 
@@ -25,7 +26,7 @@ internal static class UoFCache
         CachedRepositoryInterfaceImplTypes ??= CachedRepositoryInterfaceTypes.ToDictionary(intr => intr,
             intr => CachedRepositoryClassTypes.FirstOrDefault(intr.IsDirectAncestor))!;
         EntityTypes ??= AppDomain.CurrentDomain.GetAssemblies().SelectMany(x =>
-            x.GetTypes().Where(y => y.IsClass && !y.IsAbstract && y.IsAssignableTo(typeof(AggregateRootEntity)))).ToList();
+            x.GetTypes().Where(y => y.IsClass && !y.IsAbstract && y.IsAssignableTo(typeof(IEntityBase)))).ToList();
 
         CachedCrudRepos = new();
         CachedReadOnlyRepos = new();
