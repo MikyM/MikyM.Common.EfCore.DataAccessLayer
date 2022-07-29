@@ -100,12 +100,12 @@ public abstract class EfDbContext : DbContext, IEfDbContext
     /// <summary>
     /// Executes an action before executing SaveChanges.
     /// </summary>
-    protected virtual void OnBeforeSaveChanges(List<EntityEntry>? detectedEntries = null)
+    protected virtual void OnBeforeSaveChanges(List<EntityEntry>? entries = null)
     {
-        if (detectedEntries is null)
+        if (entries is null)
             ChangeTracker.DetectChanges();
         
-        foreach (var entry in detectedEntries ?? ChangeTracker.Entries().ToList())
+        foreach (var entry in entries ?? ChangeTracker.Entries().ToList())
         {
             if (entry.Entity is Entity entity)
                 switch (entry.State)

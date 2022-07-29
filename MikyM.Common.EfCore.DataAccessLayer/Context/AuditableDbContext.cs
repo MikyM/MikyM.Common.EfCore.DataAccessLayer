@@ -63,13 +63,13 @@ public abstract class AuditableDbContext : EfDbContext
 
     /// <inheritdoc/>
     /// <remarks>Handles audit logs and <see cref="Entity.CreatedAt"/>, <see cref="Entity.UpdatedAt"/> properties.</remarks>
-    protected override void OnBeforeSaveChanges(List<EntityEntry>? detectedEntries = null)
+    protected override void OnBeforeSaveChanges(List<EntityEntry>? entries = null)
     {
-        ChangeTracker.DetectChanges();
-        var detectedChanges = ChangeTracker.Entries().ToList();
-        
+        if (entries is null)
+            ChangeTracker.DetectChanges();
+
         var auditEntries = new List<AuditEntry>();
-        foreach (var entry in detectedChanges)
+        foreach (var entry in entries ?? ChangeTracker.Entries().ToList())
         {
             if (entry.Entity is AuditLog || entry.State is EntityState.Detached or EntityState.Unchanged)
                 continue;
@@ -117,6 +117,6 @@ public abstract class AuditableDbContext : EfDbContext
         foreach (var auditEntry in auditEntries) 
             AuditLogs.Add(auditEntry.ToAudit());
         
-        base.OnBeforeSaveChanges(detectedChanges);
+        base.OnBeforeSaveChanges(entries);
     }
 }
