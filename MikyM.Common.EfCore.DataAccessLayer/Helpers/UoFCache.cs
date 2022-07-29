@@ -13,7 +13,7 @@ internal static class UoFCache
     static UoFCache()
     {
         EntityTypeIdTypeDictionary ??= AppDomain.CurrentDomain.GetAssemblies().SelectMany(x =>
-                x.GetTypes().Where(y => y.IsClass && !y.IsAbstract && y.IsAssignableTo(typeof(IEntityBase))))
+                x.GetTypes().Where(y => y.IsClass && !y.IsAbstract && y.IsAssignableToWithGenerics(typeof(IEntity<>))))
             .ToDictionary(x => x, x => x.GetIdType());
 
         CachedCrudRepos = new Dictionary<Type, Type>();
