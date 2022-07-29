@@ -94,7 +94,7 @@ public abstract class EfDbContext : DbContext, IEfDbContext
         if (!Config.Value.DisableOnBeforeSaveChanges) 
             OnBeforeSaveChanges();
         
-        return await base.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return await base.SaveChangesAsync(true, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
