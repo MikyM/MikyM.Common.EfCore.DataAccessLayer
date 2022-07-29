@@ -66,10 +66,13 @@ public abstract class AuditableDbContext : EfDbContext
     protected override void OnBeforeSaveChanges(List<EntityEntry>? entries = null)
     {
         if (entries is null)
+        {
             ChangeTracker.DetectChanges();
+            entries = ChangeTracker.Entries().ToList();
+        }
 
         var auditEntries = new List<AuditEntry>();
-        foreach (var entry in entries ?? ChangeTracker.Entries().ToList())
+        foreach (var entry in entries)
         {
             if (entry.Entity is AuditLog || entry.State is EntityState.Detached or EntityState.Unchanged)
                 continue;
