@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using MikyM.Common.Domain.Entities;
 using MikyM.Common.Utilities.Extensions;
 
 namespace MikyM.Common.EfCore.DataAccessLayer;

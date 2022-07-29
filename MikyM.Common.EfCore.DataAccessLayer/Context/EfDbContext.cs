@@ -3,7 +3,6 @@ using System.Threading;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Options;
-using MikyM.Common.Domain.Entities;
 using MikyM.Common.EfCore.DataAccessLayer.Helpers;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.Context;

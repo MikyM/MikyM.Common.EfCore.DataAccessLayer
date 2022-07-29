@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
 using MikyM.Common.DataAccessLayer.Exceptions;
-using MikyM.Common.Domain.Entities;
-using MikyM.Common.Domain.Entities.Base;
-using MikyM.Common.EfCore.DataAccessLayer.Context;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
 // ReSharper disable SuspiciousTypeConversion.Global
 

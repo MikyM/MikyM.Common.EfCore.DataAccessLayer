@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using MikyM.Common.Domain.Entities;
-using MikyM.Common.Domain.Entities.Base;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 

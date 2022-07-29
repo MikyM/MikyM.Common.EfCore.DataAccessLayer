@@ -1,10 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
-using MikyM.Common.DataAccessLayer.Repositories;
-using MikyM.Common.Domain.Entities;
-using MikyM.Common.Domain.Entities.Base;
-using MikyM.Common.EfCore.DataAccessLayer.Context;
-using MikyM.Common.EfCore.DataAccessLayer.Specifications;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 

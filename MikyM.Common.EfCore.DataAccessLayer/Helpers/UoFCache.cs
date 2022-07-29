@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
-using MikyM.Common.DataAccessLayer.Repositories;
-using MikyM.Common.Domain.Entities;
-using MikyM.Common.Domain.Entities.Base;
 using MikyM.Common.EfCore.DataAccessLayer.Repositories;
 using MikyM.Common.Utilities.Extensions;
 
