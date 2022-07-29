@@ -189,7 +189,7 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
 /// </summary>
 /// <inheritdoc cref="IRepository{TEntity}"/>
 [PublicAPI]
-public class Repository<TEntity> : Repository<TEntity, long> where TEntity : class, IEntity<long>
+public class Repository<TEntity> : Repository<TEntity, long>, IRepository<TEntity> where TEntity : class, IEntity<long>
 {
     internal Repository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator) : base(context, specificationEvaluator)
     {
