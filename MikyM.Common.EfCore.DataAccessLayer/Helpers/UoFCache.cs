@@ -12,33 +12,31 @@ internal static class UoFCache
 {
     static UoFCache()
     {
-        CachedRepositoryClassTypes ??= AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(x => x.GetTypes().Where(t =>
-                t.IsClass && !t.IsAbstract && t.GetInterface(nameof(IRepositoryBase)) is not null))
-            .ToList();
-        CachedRepositoryInterfaceTypes ??= AppDomain.CurrentDomain.GetAssemblies()
-            .SelectMany(x => x.GetTypes().Where(t =>
-                t.IsInterface && t.GetInterface(nameof(IRepositoryBase)) is not null))
-            .ToList();
-        CachedRepositoryInterfaceImplTypes ??= CachedRepositoryInterfaceTypes.ToDictionary(intr => intr,
-            intr => CachedRepositoryClassTypes.FirstOrDefault(intr.IsDirectAncestor))!;
         EntityTypeIdTypeDictionary ??= AppDomain.CurrentDomain.GetAssemblies().SelectMany(x =>
                 x.GetTypes().Where(y => y.IsClass && !y.IsAbstract && y.IsAssignableTo(typeof(IEntityBase))))
             .ToDictionary(x => x, x => x.GetIdType());
 
         CachedCrudRepos = new Dictionary<Type, Type>();
         CachedReadOnlyRepos = new Dictionary<Type, Type>();
+        CachedCrudGenericIdRepos = new Dictionary<Type, Type>();
+        CachedReadOnlyGenericIdRepos = new Dictionary<Type, Type>();
+        
         foreach (var (entityType, idType) in EntityTypeIdTypeDictionary)
         {
-            CachedCrudRepos.TryAdd(entityType, typeof(Repository<,>).MakeGenericType(entityType, idType));
-            CachedReadOnlyRepos.TryAdd(entityType, typeof(ReadOnlyRepository<,>).MakeGenericType(entityType, idType));
+            CachedCrudGenericIdRepos.TryAdd(entityType, typeof(Repository<,>).MakeGenericType(entityType, idType));
+            CachedReadOnlyGenericIdRepos.TryAdd(entityType, typeof(ReadOnlyRepository<,>).MakeGenericType(entityType, idType));
+
+            if (idType != typeof(long))
+                continue;
+            
+            CachedCrudRepos.TryAdd(entityType, typeof(Repository<>).MakeGenericType(entityType));
+            CachedReadOnlyRepos.TryAdd(entityType, typeof(ReadOnlyRepository<>).MakeGenericType(entityType));
         }
     }
-
-    internal static IEnumerable<Type> CachedRepositoryClassTypes { get; }
-    internal static IEnumerable<Type> CachedRepositoryInterfaceTypes { get; }
-    internal static Dictionary<Type, Type> CachedRepositoryInterfaceImplTypes { get; }
-    internal static Dictionary<Type,Type> EntityTypeIdTypeDictionary { get; }
+    
+    internal static Dictionary<Type, Type> EntityTypeIdTypeDictionary { get; }
     internal static Dictionary<Type, Type> CachedReadOnlyRepos { get; }
     internal static Dictionary<Type, Type> CachedCrudRepos { get; }
+    internal static Dictionary<Type, Type> CachedReadOnlyGenericIdRepos { get; }
+    internal static Dictionary<Type, Type> CachedCrudGenericIdRepos { get; }
 }

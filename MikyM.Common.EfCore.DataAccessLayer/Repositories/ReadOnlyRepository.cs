@@ -126,3 +126,16 @@ public class ReadOnlyRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> 
         ISpecification<TEntity, TResult> specification) where TResult : class
         => SpecificationEvaluator.GetQuery(Set.AsQueryable(), specification);
 }
+
+
+/// <summary>
+/// Read-only repository.
+/// </summary>
+/// <inheritdoc cref="IReadOnlyRepository{TEntity}"/>
+[PublicAPI]
+public class ReadOnlyRepository<TEntity> : ReadOnlyRepository<TEntity, long> where TEntity : class, IEntity<long>
+{
+    internal ReadOnlyRepository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator) : base(context, specificationEvaluator)
+    {
+    }
+}

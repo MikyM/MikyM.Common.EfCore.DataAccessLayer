@@ -57,60 +57,64 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
     public async Task UseTransactionAsync()
         => _transaction ??= await Context.Database.BeginTransactionAsync().ConfigureAwait(false);
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="IUnitOfWork.GetRepository{TRepository}" />
     public TRepository GetRepository<TRepository>() where TRepository : class, IRepositoryBase
     {
+        var givenType = typeof(TRepository);
+        if (!givenType.IsInterface || !givenType.IsGenericType)
+            throw new NotSupportedException("You can only retrieve types: IRepository<TEntity>, IRepository<TEntity,TId>, IReadOnlyRepository<TEntity> and IReadOnlyRepository<TEntity,TId>.");
+
         _repositories ??= new ConcurrentDictionary<string, Lazy<IRepositoryBase>>();
         _entityTypesOfRepositories ??= new ConcurrentDictionary<string, string>();
 
-        var type = typeof(TRepository);
-        string name = type.FullName ?? type.Name;
-        var entityType = type.GetGenericArguments().FirstOrDefault();
+        Type? repositoryType;
+        string repositoryTypeFullName;
+        
+        var entityType = givenType.GetGenericArguments().FirstOrDefault();
         if (entityType is null)
-            throw new ArgumentException("Couldn't retrieve entity type from generic arguments on repository type");
+            throw new ArgumentException("Couldn't retrieve entity type from generic arguments on given repository type.");
         var entityTypeName = entityType.FullName ?? entityType.Name;
         
-        if (type.IsInterface)
+        switch (givenType.IsGenericType)
         {
-            switch (type.IsGenericType)
-            {
-                case true when type.GetGenericTypeDefinition() == typeof(IRepository<,>):
-                    type = UoFCache.CachedCrudRepos.GetValueOrDefault(entityType);
-                    name = type?.FullName ?? throw new InvalidOperationException();
-                    break;
-                case true when type.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<,>):
-                    type = UoFCache.CachedReadOnlyRepos.GetValueOrDefault(entityType);
-                    name = type?.FullName ?? throw new InvalidOperationException();
-                    break;
-                default:
-                {
-                    if (!UoFCache.CachedRepositoryInterfaceImplTypes.TryGetValue(type, out var implType))
-                        throw new InvalidOperationException($"Couldn't find a non-abstract implementation of {name}");
-                    type = implType;
-                    name = implType.FullName ?? throw new InvalidOperationException();
-                    break;
-                }
-            }
+            case true when givenType.GetGenericTypeDefinition() == typeof(IRepository<,>):
+                repositoryType = UoFCache.CachedCrudGenericIdRepos.GetValueOrDefault(entityType);
+                repositoryTypeFullName = repositoryType?.FullName ?? throw new InvalidOperationException("Couldn't find proper type in cache.");
+                break;
+            case true when givenType.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<,>):
+                repositoryType = UoFCache.CachedReadOnlyGenericIdRepos.GetValueOrDefault(entityType);
+                repositoryTypeFullName = repositoryType?.FullName ?? throw new InvalidOperationException("Couldn't find proper type in cache.");
+                break;
+            case true when givenType.GetGenericTypeDefinition() == typeof(IRepository<>):
+                repositoryType = UoFCache.CachedCrudRepos.GetValueOrDefault(entityType);
+                repositoryTypeFullName = repositoryType?.FullName ?? throw new InvalidOperationException("Couldn't find proper type in cache.");
+                break;
+            case true when givenType.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<>):
+                repositoryType = UoFCache.CachedReadOnlyRepos.GetValueOrDefault(entityType);
+                repositoryTypeFullName = repositoryType?.FullName ?? throw new InvalidOperationException("Couldn't find proper type in cache.");
+                break;
+            default:
+                throw new NotSupportedException("You can only retrieve types: IRepository<TEntity>, IRepository<TEntity,TId>, IReadOnlyRepository<TEntity> and IReadOnlyRepository<TEntity,TId>.");
         }
+        
+        if (repositoryType is null)
+            throw new InvalidOperationException("Couldn't find proper type in cache.");
 
         // lazy to avoid creating whole repository and then discarding it due to the fact that GetOrAdd isn't atomic, creation of Lazy<T> is very cheap
-        var lazyRepository = _repositories.GetOrAdd(name, _ =>
+        var lazyRepository = _repositories.GetOrAdd(repositoryTypeFullName, _ =>
         {
             if (!_entityTypesOfRepositories.TryAdd(entityTypeName, entityTypeName))
                 throw new InvalidOperationException(
-                    "Seems like you tried to create a different type of repository (ie. both read-only and crud) for same entity type within same unit of work instance - it is not supported as it may lead to unexpected results");
+                    "Seems like you tried to create a different type of repository (ie. both read-only and crud) for same entity type within same unit of work instance - it is not supported as it may lead to unexpected results and it is not advised as it makes code less readable.");
 
             return new Lazy<IRepositoryBase>(() =>
             {
                 var instance =
-                    InstanceFactory.CreateInstance(type, Context,
-                        _specificationEvaluator); /*Activator.CreateInstance(type,
-                    BindingFlags.NonPublic | BindingFlags.Instance, null, new object[]
-                    {
-                        Context, _specificationEvaluator
-                    }, CultureInfo.InvariantCulture);*/
+                    InstanceFactory.CreateInstance(repositoryType, Context,
+                        _specificationEvaluator);
 
-                if (instance is null) throw new InvalidOperationException($"Couldn't create an instance of {name}");
+                if (instance is null) 
+                    throw new InvalidOperationException($"Couldn't create an instance of {repositoryTypeFullName}");
 
                 return (TRepository)instance;
             });

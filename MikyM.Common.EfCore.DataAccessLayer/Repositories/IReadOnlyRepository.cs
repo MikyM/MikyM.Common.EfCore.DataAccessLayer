@@ -6,7 +6,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// <summary>
 /// Read-only repository.
 /// </summary>
-/// <typeparam name="TEntity">Entity that derives from <see cref="Entity"/>.</typeparam>
+/// <typeparam name="TEntity">Entity that derives from <see cref="Entity{TId}"/>.</typeparam>
 /// <typeparam name="TId">Type of the Id in <typeparamref name="TEntity"/>.</typeparam>
 [PublicAPI]
 public interface IReadOnlyRepository<TEntity,TId> : IRepositoryBase where TEntity : class, IEntity<TId> where TId : IComparable, IEquatable<TId>, IComparable<TId>
@@ -90,4 +90,13 @@ public interface IReadOnlyRepository<TEntity,TId> : IRepositoryBase where TEntit
     /// <param name="specification">Specification for the query.</param>
     /// <returns>True if any elements in the source sequence satisfy the condition, otherwise false.</returns>
     Task<bool> AnyAsync(ISpecification<TEntity> specification);
+}
+
+/// <summary>
+/// Repository.
+/// </summary>
+/// <typeparam name="TEntity">Entity that derives from <see cref="Entity"/>.</typeparam>
+[PublicAPI]
+public interface IReadOnlyRepository<TEntity> : IReadOnlyRepository<TEntity,long> where TEntity : class, IEntity<long>
+{
 }
