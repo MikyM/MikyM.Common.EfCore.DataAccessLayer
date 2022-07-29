@@ -8,10 +8,10 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// <summary>
 /// Repository.
 /// </summary>
-/// <inheritdoc cref="IRepository{TEntity}"/>
+/// <inheritdoc cref="IRepository{TEntity,TId}"/>
 [PublicAPI]
-public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEntity>
-    where TEntity : class, IEntityBase
+public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IRepository<TEntity,TId>
+    where TEntity : class, IEntity<TId> where TId : IComparable, IEquatable<TId>, IComparable<TId>
 {
     internal Repository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator) : base(context,
         specificationEvaluator)
@@ -26,8 +26,6 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
     /// <inheritdoc />
     public virtual void AddRange(IEnumerable<TEntity> entities)
         => Set.AddRange(entities);
-
-
 
     /// <inheritdoc />
     public virtual void BeginUpdate(TEntity entity, bool shouldSwapAttached = false)
@@ -73,7 +71,7 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
     }
 
     /// <inheritdoc />
-    public virtual void Delete(long id)
+    public virtual void Delete(TId id)
     {
         var entity = Context.FindTracked<TEntity>(id) ?? (TEntity) Activator.CreateInstance(typeof(TEntity), id)!;
         Set.Remove(entity);
@@ -84,7 +82,7 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
         => Set.RemoveRange(entities);
 
     /// <inheritdoc />
-    public virtual void DeleteRange(IEnumerable<long> ids)
+    public virtual void DeleteRange(IEnumerable<TId> ids)
     {
         var entities = ids.Select(id =>
                 Context.FindTracked<TEntity>(id) ?? (TEntity) Activator.CreateInstance(typeof(TEntity), id)!)
@@ -103,7 +101,7 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
     }
 
     /// <inheritdoc />
-    public virtual async Task DisableAsync(long id)
+    public virtual async Task DisableAsync(TId id)
     {
         var entity = await GetAsync(id).ConfigureAwait(false);
         
@@ -128,7 +126,7 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
     }
 
     /// <inheritdoc />
-    public virtual async Task DisableRangeAsync(IEnumerable<long> ids)
+    public virtual async Task DisableRangeAsync(IEnumerable<TId> ids)
     {
         var entities = await Set
             .Join(ids, ent => ent.Id, id => id, (ent, id) => ent)
@@ -145,16 +143,16 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
     public void Detach(TEntity entity)
     {
         Context.Entry(entity).State = EntityState.Detached;
-        DetachRoot(entity);
+        DetachRoot(entity as EntityBase ?? throw new InvalidOperationException("Entity type doesn't inherit from EntityBase"));
     }
 
-    private void DetachRoot(IEntityBase entity)
+    private void DetachRoot(EntityBase entity)
     {
         foreach (var entry in Context.Entry(entity).Navigations)
         {
             switch (entry.CurrentValue)
             {
-                case IEnumerable<Entity> navs:
+                case IEnumerable<EntityBase> navs:
                 {
                     var list = navs.ToList();
 
@@ -171,7 +169,7 @@ public class Repository<TEntity> : ReadOnlyRepository<TEntity>, IRepository<TEnt
                     
                     break;
                 }
-                case Entity nav:
+                case EntityBase nav:
                 {
                     var singularEntry = Context.Entry(nav);
                     if (singularEntry.State is EntityState.Detached)

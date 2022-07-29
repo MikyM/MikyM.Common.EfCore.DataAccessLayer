@@ -23,7 +23,7 @@ public static class DependancyInjectionExtensions
     /// Adds Data Access Layer to the application.
     /// </summary>
     /// <remarks>
-    /// Automatically registers <see cref="IRepository{TEntity}"/>, <see cref="IReadOnlyRepository{TEntity}"/>, all base <see cref="IEvaluator"/> types, <see cref="ISpecificationValidator"/>, <see cref="IInMemorySpecificationEvaluator"/>, <see cref="ISpecificationEvaluator"/>, <see cref="IUnitOfWork{TContext}"/> with <see cref="ContainerBuilder"/>.
+    /// Automatically registers all base <see cref="IEvaluator"/> types, <see cref="ISpecificationValidator"/>, <see cref="IInMemorySpecificationEvaluator"/>, <see cref="ISpecificationEvaluator"/>, <see cref="IUnitOfWork{TContext}"/> with <see cref="ContainerBuilder"/>.
     /// </remarks>
     /// <param name="configuration">Current instance of <see cref="DataAccessConfiguration"/></param>
     /// <param name="options"><see cref="Action"/> that configures DAL.</param>
@@ -41,15 +41,7 @@ public static class DependancyInjectionExtensions
         var ctorFinder = new AllConstructorsFinder();
 
         builder.Register(x => config).As<IOptions<EfCoreDataAccessConfiguration>>().SingleInstance();
-
-        builder.RegisterGeneric(typeof(ReadOnlyRepository<>))
-            .As(typeof(IReadOnlyRepository<>))
-            .FindConstructorsWith(ctorFinder)
-            .InstancePerLifetimeScope();
-        builder.RegisterGeneric(typeof(Repository<>))
-            .As(typeof(IRepository<>))
-            .FindConstructorsWith(ctorFinder)
-            .InstancePerLifetimeScope();
+        
         builder.RegisterGeneric(typeof(UnitOfWork<>)).As(typeof(IUnitOfWork<>)).InstancePerLifetimeScope();
 
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())

@@ -22,24 +22,23 @@ internal static class UoFCache
             .ToList();
         CachedRepositoryInterfaceImplTypes ??= CachedRepositoryInterfaceTypes.ToDictionary(intr => intr,
             intr => CachedRepositoryClassTypes.FirstOrDefault(intr.IsDirectAncestor))!;
-        EntityTypes ??= AppDomain.CurrentDomain.GetAssemblies().SelectMany(x =>
-            x.GetTypes().Where(y => y.IsClass && !y.IsAbstract && y.IsAssignableTo(typeof(IEntityBase)))).ToList();
+        EntityTypeIdTypeDictionary ??= AppDomain.CurrentDomain.GetAssemblies().SelectMany(x =>
+                x.GetTypes().Where(y => y.IsClass && !y.IsAbstract && y.IsAssignableTo(typeof(IEntityBase))))
+            .ToDictionary(x => x, x => x.GetIdType());
 
-        CachedCrudRepos = new();
-        CachedReadOnlyRepos = new();
-        foreach (var entityType in EntityTypes)
+        CachedCrudRepos = new Dictionary<Type, Type>();
+        CachedReadOnlyRepos = new Dictionary<Type, Type>();
+        foreach (var (entityType, idType) in EntityTypeIdTypeDictionary)
         {
-            CachedCrudRepos.TryAdd(entityType, typeof(Repository<>).MakeGenericType(entityType));
-            CachedReadOnlyRepos.TryAdd(entityType, typeof(ReadOnlyRepository<>).MakeGenericType(entityType));
+            CachedCrudRepos.TryAdd(entityType, typeof(Repository<,>).MakeGenericType(entityType, idType));
+            CachedReadOnlyRepos.TryAdd(entityType, typeof(ReadOnlyRepository<,>).MakeGenericType(entityType, idType));
         }
     }
 
     internal static IEnumerable<Type> CachedRepositoryClassTypes { get; }
     internal static IEnumerable<Type> CachedRepositoryInterfaceTypes { get; }
     internal static Dictionary<Type, Type> CachedRepositoryInterfaceImplTypes { get; }
-    internal static IEnumerable<Type> EntityTypes { get; }
+    internal static Dictionary<Type,Type> EntityTypeIdTypeDictionary { get; }
     internal static Dictionary<Type, Type> CachedReadOnlyRepos { get; }
     internal static Dictionary<Type, Type> CachedCrudRepos { get; }
-    internal static ConstructorInfo RepoCtor { get; }
-    internal static ConstructorInfo ReadOnlyRepoCtor { get; }
 }

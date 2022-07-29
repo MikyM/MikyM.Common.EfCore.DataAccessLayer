@@ -7,8 +7,9 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// Read-only repository.
 /// </summary>
 /// <typeparam name="TEntity">Entity that derives from <see cref="Entity"/>.</typeparam>
+/// <typeparam name="TId">Type of the Id in <typeparamref name="TEntity"/>.</typeparam>
 [PublicAPI]
-public interface IReadOnlyRepository<TEntity> : IRepositoryBase where TEntity : class, IEntityBase
+public interface IReadOnlyRepository<TEntity,TId> : IRepositoryBase where TEntity : class, IEntity<TId> where TId : IComparable, IEquatable<TId>, IComparable<TId>
 {
     /// <summary>
     /// Current <see cref="IEfDbContext"/>.

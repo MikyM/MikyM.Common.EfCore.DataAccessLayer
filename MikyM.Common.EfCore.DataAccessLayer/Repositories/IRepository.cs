@@ -6,8 +6,9 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// Repository.
 /// </summary>
 /// <typeparam name="TEntity">Entity that derives from <see cref="Entity"/>.</typeparam>
+/// <typeparam name="TId">Type of the Id in <typeparamref name="TEntity"/>.</typeparam>
 [PublicAPI]
-public interface IRepository<TEntity> : IReadOnlyRepository<TEntity> where TEntity : class, IEntityBase
+public interface IRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> where TEntity : class, IEntity<TId> where TId : IComparable, IEquatable<TId>, IComparable<TId>
 {
     /// <summary>
     /// Adds an entity.
@@ -45,7 +46,7 @@ public interface IRepository<TEntity> : IReadOnlyRepository<TEntity> where TEnti
     /// Deletes an entity.
     /// </summary>
     /// <param name="id">Id of the entity to delete.</param>
-    void Delete(long id);
+    void Delete(TId id);
 
     /// <summary>
     /// Deletes a range of entities.
@@ -57,7 +58,7 @@ public interface IRepository<TEntity> : IReadOnlyRepository<TEntity> where TEnti
     /// Deletes a range of entities.
     /// </summary>
     /// <param name="ids">Ids of the entities to delete.</param>
-    void DeleteRange(IEnumerable<long> ids);
+    void DeleteRange(IEnumerable<TId> ids);
 
     /// <summary>
     /// Disables an entity.
@@ -69,7 +70,7 @@ public interface IRepository<TEntity> : IReadOnlyRepository<TEntity> where TEnti
     /// Disables an entity.
     /// </summary>
     /// <param name="id">Id of the entity to disable.</param>
-    Task DisableAsync(long id);
+    Task DisableAsync(TId id);
 
     /// <summary>
     /// Disables a range of entities.
@@ -81,7 +82,7 @@ public interface IRepository<TEntity> : IReadOnlyRepository<TEntity> where TEnti
     /// Disables a range of entities.
     /// </summary>
     /// <param name="ids">Ids of the entities to disable.</param>
-    Task DisableRangeAsync(IEnumerable<long> ids);
+    Task DisableRangeAsync(IEnumerable<TId> ids);
 
     /// <summary>
     /// Detaches an entity and all of it's reachable navigation properties.

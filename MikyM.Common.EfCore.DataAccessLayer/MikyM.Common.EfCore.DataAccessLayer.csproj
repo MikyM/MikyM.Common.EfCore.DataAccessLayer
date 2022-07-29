@@ -4,7 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<PackageId>MikyM.Common.EfCore.DataAccessLayer</PackageId>
-		<Version>1.2.9</Version>
+		<Version>1.3.0</Version>
 		<Authors>Krzysztof Kupisz</Authors>
 		<PackageDescription>Data access layer.</PackageDescription>
 		<RepositoryUrl>https://github.com/MikyM/MikyM.Common.EfCore.DataAccessLayer</RepositoryUrl>
@@ -19,7 +19,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.7" />
 		<PackageReference Include="MikyM.Autofac.Extensions" Version="1.0.8" />
-		<PackageReference Include="MikyM.Common.DataAccessLayer" Version="1.4.10" />
+		<PackageReference Include="MikyM.Common.DataAccessLayer" Version="1.4.12" />
 		<PackageReference Include="MikyM.Common.Utilities" Version="1.0.10" />
 	</ItemGroup>
 

@@ -74,11 +74,11 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
         {
             switch (type.IsGenericType)
             {
-                case true when type.GetGenericTypeDefinition() == typeof(IRepository<>):
+                case true when type.GetGenericTypeDefinition() == typeof(IRepository<,>):
                     type = UoFCache.CachedCrudRepos.GetValueOrDefault(entityType);
                     name = type?.FullName ?? throw new InvalidOperationException();
                     break;
-                case true when type.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<>):
+                case true when type.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<,>):
                     type = UoFCache.CachedReadOnlyRepos.GetValueOrDefault(entityType);
                     name = type?.FullName ?? throw new InvalidOperationException();
                     break;
