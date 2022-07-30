@@ -120,12 +120,12 @@ public abstract class EfDbContext : DbContext, IEfDbContext
                         }
                         break;
                     case EntityState.Modified:
-                        if (entity.UpdatedAt is null)
+                        if (!entry.Property("UpdatedAt").IsModified)
                         {
                             entity.UpdatedAt = DateTime.UtcNow;
                             entry.Property("UpdatedAt").IsModified = true;
-                            entry.Property("CreatedAt").IsModified = false;   
                         }
+                        entry.Property("CreatedAt").IsModified = false;  
                         break;
                 }
         }
