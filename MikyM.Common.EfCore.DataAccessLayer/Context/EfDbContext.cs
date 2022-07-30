@@ -113,13 +113,19 @@ public abstract class EfDbContext : DbContext, IEfDbContext
                 switch (entry.State)
                 {
                     case EntityState.Added:
-                        entity.CreatedAt = DateTime.UtcNow;
-                        entry.Property("CreatedAt").IsModified = true;
+                        if (entity.CreatedAt is null)
+                        {
+                            entity.CreatedAt = DateTime.UtcNow;
+                            entry.Property("CreatedAt").IsModified = true;
+                        }
                         break;
                     case EntityState.Modified:
-                        entity.UpdatedAt = DateTime.UtcNow;
-                        entry.Property("UpdatedAt").IsModified = true;
-                        entry.Property("CreatedAt").IsModified = false;
+                        if (entity.UpdatedAt is null)
+                        {
+                            entity.UpdatedAt = DateTime.UtcNow;
+                            entry.Property("UpdatedAt").IsModified = true;
+                            entry.Property("CreatedAt").IsModified = false;   
+                        }
                         break;
                 }
         }
