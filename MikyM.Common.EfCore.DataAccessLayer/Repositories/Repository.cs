@@ -140,7 +140,7 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
     }
 
     /// <inheritdoc />
-    public void Detach(TEntity entity)
+    public virtual void Detach(TEntity entity)
     {
         var entry = Context.Entry(entity);
         entry.State = EntityState.Detached;
@@ -148,10 +148,17 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
         RecursivelyDetachEntryNavs(entry);
     }
 
-    private void RecursivelyDetachEntryNavs(EntityEntry entityEntry)
+    /// <summary>
+    /// Recursively detaches all reachable entities.
+    /// </summary>
+    /// <param name="entityEntry">Base entry.</param>
+    protected virtual void RecursivelyDetachEntryNavs(EntityEntry entityEntry)
     {
         foreach (var entry in entityEntry.Navigations)
         {
+            if (entry.CurrentValue is null)
+                continue;
+
             switch (entry.CurrentValue)
             {
                 case IEnumerable<EntityBase> navs:
