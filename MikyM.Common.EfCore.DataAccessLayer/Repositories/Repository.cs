@@ -161,7 +161,7 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
 
             switch (entry.CurrentValue)
             {
-                case IEnumerable<EntityBase> navs:
+                case IEnumerable<IEntityBase> navs:
                 {
                     var list = navs.ToList();
 
@@ -178,7 +178,7 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
                     
                     break;
                 }
-                case EntityBase nav:
+                case IEntityBase nav:
                 {
                     var singularEntry = Context.Entry(nav);
                     if (singularEntry.State is EntityState.Detached)
