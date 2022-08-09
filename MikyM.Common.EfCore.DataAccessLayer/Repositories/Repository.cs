@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using MikyM.Common.DataAccessLayer.Exceptions;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
 // ReSharper disable SuspiciousTypeConversion.Global
@@ -11,12 +12,11 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// <inheritdoc cref="IRepository{TEntity,TId}"/>
 [PublicAPI]
 public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IRepository<TEntity,TId>
-    where TEntity : class, IEntity<TId> where TId : IComparable, IEquatable<TId>, IComparable<TId>
+    where TEntity : EntityBase, IEntity<TId> where TId : IComparable, IEquatable<TId>, IComparable<TId>
 {
     internal Repository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator) : base(context,
         specificationEvaluator)
     {
-        
     }
 
     /// <inheritdoc />
@@ -142,13 +142,15 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
     /// <inheritdoc />
     public void Detach(TEntity entity)
     {
-        Context.Entry(entity).State = EntityState.Detached;
-        DetachRoot(entity as EntityBase ?? throw new InvalidOperationException("Entity type doesn't inherit from EntityBase"));
+        var entry = Context.Entry(entity);
+        entry.State = EntityState.Detached;
+        
+        RecursivelyDetachEntryNavs(entry);
     }
 
-    private void DetachRoot(EntityBase entity)
+    private void RecursivelyDetachEntryNavs(EntityEntry entityEntry)
     {
-        foreach (var entry in Context.Entry(entity).Navigations)
+        foreach (var entry in entityEntry.Navigations)
         {
             switch (entry.CurrentValue)
             {
@@ -162,9 +164,9 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
                     foreach (var nav in list.Where(x => Context.Entry(x).State is not EntityState.Detached))
                     {
                         var enumerableEntry = Context.Entry(nav);
-
                         enumerableEntry.State = EntityState.Detached;
-                        DetachRoot(nav);
+                        
+                        RecursivelyDetachEntryNavs(enumerableEntry);
                     }
                     
                     break;
@@ -174,9 +176,9 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
                     var singularEntry = Context.Entry(nav);
                     if (singularEntry.State is EntityState.Detached)
                         break;
-
                     singularEntry.State = EntityState.Detached;
-                    DetachRoot(nav);
+                    
+                    RecursivelyDetachEntryNavs(singularEntry);
                     break;
                 }
             }
@@ -189,7 +191,7 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
 /// </summary>
 /// <inheritdoc cref="IRepository{TEntity}"/>
 [PublicAPI]
-public class Repository<TEntity> : Repository<TEntity, long>, IRepository<TEntity> where TEntity : class, IEntity<long>
+public class Repository<TEntity> : Repository<TEntity, long>, IRepository<TEntity> where TEntity : EntityBase, IEntity<long>
 {
     internal Repository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator) : base(context, specificationEvaluator)
     {
