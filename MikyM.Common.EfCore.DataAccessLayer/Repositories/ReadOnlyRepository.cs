@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Threading;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
@@ -41,64 +42,67 @@ public class ReadOnlyRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> 
     /// <inheritdoc />
     public virtual async ValueTask<TEntity?> GetAsync(params object[] keyValues)
         => await Set.FindAsync(keyValues).ConfigureAwait(false);
+    
+    /// <inheritdoc />
+    public virtual async ValueTask<TEntity?> GetAsync(object?[]? keyValues, CancellationToken cancellationToken)
+        => await Set.FindAsync(keyValues, cancellationToken).ConfigureAwait(false);
 
     /// <inheritdoc />
-    public virtual async Task<TEntity?> GetSingleBySpecAsync(ISpecification<TEntity> specification)
+    public virtual async Task<TEntity?> GetSingleBySpecAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default)
         => await ApplySpecification(specification)
-            .FirstOrDefaultAsync().ConfigureAwait(false);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
     /// <inheritdoc />
     public virtual async Task<TProjectTo?> GetSingleBySpecAsync<TProjectTo>(
-        ISpecification<TEntity, TProjectTo> specification) where TProjectTo : class
+        ISpecification<TEntity, TProjectTo> specification, CancellationToken cancellationToken = default) where TProjectTo : class
         => await ApplySpecification(specification)
-            .FirstOrDefaultAsync().ConfigureAwait(false);
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
 
     /// <inheritdoc />
     public virtual async Task<IReadOnlyList<TProjectTo>> GetBySpecAsync<TProjectTo>(
-        ISpecification<TEntity, TProjectTo> specification) where TProjectTo : class
+        ISpecification<TEntity, TProjectTo> specification, CancellationToken cancellationToken = default) where TProjectTo : class
     {
-        var result = await ApplySpecification(specification).ToListAsync().ConfigureAwait(false);
+        var result = await ApplySpecification(specification).ToListAsync(cancellationToken).ConfigureAwait(false);
         return specification.PostProcessingAction is null
             ? result
             : specification.PostProcessingAction(result).ToList();
     }
 
     /// <inheritdoc />
-    public virtual async Task<IReadOnlyList<TEntity>> GetBySpecAsync(ISpecification<TEntity> specification)
+    public virtual async Task<IReadOnlyList<TEntity>> GetBySpecAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default)
     {
         var result = await ApplySpecification(specification)
-            .ToListAsync().ConfigureAwait(false);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
         return specification.PostProcessingAction is null
             ? result
             : specification.PostProcessingAction(result).ToList();
     }
 
     /// <inheritdoc />
-    public virtual async Task<long> LongCountAsync(ISpecification<TEntity>? specification = null)
-    {
-        if (specification is null) 
-            return await Set.LongCountAsync().ConfigureAwait(false);
-
-        return await ApplySpecification(specification)
-            .LongCountAsync().ConfigureAwait(false);
-    }
+    public virtual async Task<long> LongCountAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default)
+        => await ApplySpecification(specification)
+            .LongCountAsync(cancellationToken).ConfigureAwait(false);
+    
+    /// <inheritdoc />
+    public virtual async Task<long> LongCountAsync(CancellationToken cancellationToken = default)
+        => await Set.LongCountAsync(cancellationToken).ConfigureAwait(false);
 
     /// <inheritdoc />
-    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate)
-        => await Set.AnyAsync(predicate).ConfigureAwait(false);
+    public async Task<bool> AnyAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default)
+        => await Set.AnyAsync(predicate, cancellationToken).ConfigureAwait(false);
 
     /// <inheritdoc />
-    public async Task<bool> AnyAsync(ISpecification<TEntity> specification)
-        => await ApplySpecification(specification).AnyAsync().ConfigureAwait(false);
+    public async Task<bool> AnyAsync(ISpecification<TEntity> specification, CancellationToken cancellationToken = default)
+        => await ApplySpecification(specification).AnyAsync(cancellationToken).ConfigureAwait(false);
 
     /// <inheritdoc />
-    public virtual async Task<IReadOnlyList<TEntity>> GetAllAsync()
-        => await Set.ToListAsync().ConfigureAwait(false);
+    public virtual async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken cancellationToken = default)
+        => await Set.ToListAsync(cancellationToken).ConfigureAwait(false);
 
     /// <inheritdoc />
-    public virtual async Task<IReadOnlyList<TProjectTo>> GetAllAsync<TProjectTo>() where TProjectTo : class
+    public virtual async Task<IReadOnlyList<TProjectTo>> GetAllAsync<TProjectTo>(CancellationToken cancellationToken = default) where TProjectTo : class
         => await ApplySpecification(new Specification<TEntity, TProjectTo>())
-            .ToListAsync().ConfigureAwait(false);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
 
     /// <summary>
     ///     Filters the entities  of <typeparamref name="TEntity" />, to those that match the encapsulated query logic of the

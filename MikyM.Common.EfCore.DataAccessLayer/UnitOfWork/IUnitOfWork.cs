@@ -1,4 +1,5 @@
-﻿using MikyM.Common.DataAccessLayer;
+﻿using System.Threading;
+using MikyM.Common.DataAccessLayer;
 using MikyM.Common.EfCore.DataAccessLayer.Repositories;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.UnitOfWork;
@@ -13,15 +14,19 @@ public interface IUnitOfWork : IUnitOfWorkBase
     /// Begins a transaction.
     /// </summary>
     /// <returns>Task representing the asynchronous operation.</returns>
-    Task UseTransactionAsync();
-    
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task UseTransactionAsync(CancellationToken cancellationToken = default);
+
     /// <inheritdoc cref="IUnitOfWorkBase.CommitAsync(string)"/>
     /// <returns>Number of affected rows.</returns>
-    Task<int> CommitWithCountAsync(string auditUserId);
+    /// <param name="auditUserId">The ID of the user responsible for the changes.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<int> CommitWithCountAsync(string auditUserId, CancellationToken cancellationToken = default);
 
     /// <inheritdoc cref="IUnitOfWorkBase.CommitAsync()"/>
     /// <returns>Number of affected rows.</returns>
-    Task<int> CommitWithCountAsync();
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<int> CommitWithCountAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a repository of a given type.

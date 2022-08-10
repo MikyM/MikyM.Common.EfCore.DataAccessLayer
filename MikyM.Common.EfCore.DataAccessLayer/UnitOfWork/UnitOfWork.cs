@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
 using MikyM.Common.EfCore.DataAccessLayer.Helpers;
@@ -9,6 +10,7 @@ using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
 namespace MikyM.Common.EfCore.DataAccessLayer.UnitOfWork;
 
 /// <inheritdoc cref="IUnitOfWork{TContext}"/>
+[PublicAPI]
 public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext : IEfDbContext
 {
     /// <summary>
@@ -43,6 +45,7 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
     /// </summary>
     /// <param name="context"><see cref="DbContext"/> to be used.</param>
     /// <param name="specificationEvaluator">Specification evaluator to be used.</param>
+    /// <param name="options">Options.</param>
     public UnitOfWork(TContext context, ISpecificationEvaluator specificationEvaluator, IOptions<EfCoreDataAccessConfiguration> options)
     {
         Context = context;
@@ -54,8 +57,8 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
     public TContext Context { get; }
 
     /// <inheritdoc />
-    public async Task UseTransactionAsync()
-        => _transaction ??= await Context.Database.BeginTransactionAsync().ConfigureAwait(false);
+    public async Task UseTransactionAsync(CancellationToken cancellationToken = default)
+        => _transaction ??= await Context.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
     /// <inheritdoc cref="IUnitOfWork.GetRepository{TRepository}" />
     public TRepository GetRepository<TRepository>() where TRepository : class, IRepositoryBase
@@ -124,50 +127,56 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
     }
 
     /// <inheritdoc />
-    public async Task RollbackAsync()
+    public async Task RollbackAsync(CancellationToken cancellationToken = default)
     {
-        if (_transaction is not null) await _transaction.RollbackAsync().ConfigureAwait(false);
+        if (_transaction is not null) 
+            await _transaction.RollbackAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public async Task CommitAsync()
+    public async Task CommitAsync(CancellationToken cancellationToken = default)
     {
         if (_options.Value.OnBeforeSaveChangesActions is not null &&
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
             await action.Invoke(this);
-        _ = await Context.SaveChangesAsync().ConfigureAwait(false);
-        if (_transaction is not null) await _transaction.CommitAsync().ConfigureAwait(false);
+        
+        _ = await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        
+        if (_transaction is not null) 
+            await _transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
-    public async Task CommitAsync(string userId)
+    public async Task CommitAsync(string userId, CancellationToken cancellationToken = default)
     {
         if (_options.Value.OnBeforeSaveChangesActions is not null &&
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
             await action.Invoke(this);
 
         if (Context is AuditableDbContext auditableDbContext)
-            _ = await auditableDbContext.SaveChangesAsync(userId).ConfigureAwait(false);
+            _ = await auditableDbContext.SaveChangesAsync(userId, cancellationToken).ConfigureAwait(false);
         else
-            _ = await Context.SaveChangesAsync().ConfigureAwait(false);
+            _ = await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         
-        if (_transaction is not null) await _transaction.CommitAsync().ConfigureAwait(false);
+        if (_transaction is not null) 
+            await _transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
     }
     
     /// <inheritdoc />
-    public async Task<int> CommitWithCountAsync()
+    public async Task<int> CommitWithCountAsync(CancellationToken cancellationToken = default)
     {
         if (_options.Value.OnBeforeSaveChangesActions is not null &&
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
             await action.Invoke(this);
 
-        int result = await Context.SaveChangesAsync().ConfigureAwait(false);
-        if (_transaction is not null) await _transaction.CommitAsync().ConfigureAwait(false);
+        int result = await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        if (_transaction is not null) 
+            await _transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
         return result;
     }
 
     /// <inheritdoc />
-    public async Task<int> CommitWithCountAsync(string userId)
+    public async Task<int> CommitWithCountAsync(string userId, CancellationToken cancellationToken = default)
     {
         if (_options.Value.OnBeforeSaveChangesActions is not null &&
             _options.Value.OnBeforeSaveChangesActions.TryGetValue(typeof(TContext).Name, out var action))
@@ -175,11 +184,13 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
 
         int result;
         if (Context is AuditableDbContext auditableDbContext)
-            result = await auditableDbContext.SaveChangesAsync(userId).ConfigureAwait(false);
+            result = await auditableDbContext.SaveChangesAsync(userId, cancellationToken).ConfigureAwait(false);
         else
-            result = await Context.SaveChangesAsync().ConfigureAwait(false);
+            result = await Context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        if (_transaction is not null) await _transaction.CommitAsync().ConfigureAwait(false);
+        if (_transaction is not null) 
+            await _transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+        
         return result;
     }
 

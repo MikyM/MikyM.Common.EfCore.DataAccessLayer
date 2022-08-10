@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using MikyM.Common.DataAccessLayer.Exceptions;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
@@ -18,14 +19,30 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
         specificationEvaluator)
     {
     }
-
+    
     /// <inheritdoc />
     public virtual void Add(TEntity entity)
         => Set.Add(entity);
+    
+    /// <inheritdoc />
+    public virtual async Task AddAsync(TEntity entity, CancellationToken cancellationToken = default)
+        => await Set.AddAsync(entity, cancellationToken);
 
     /// <inheritdoc />
     public virtual void AddRange(IEnumerable<TEntity> entities)
         => Set.AddRange(entities);
+    
+    /// <inheritdoc />
+    public virtual void AddRange(params TEntity[] entities)
+        => Set.AddRange(entities);
+    
+    /// <inheritdoc />
+    public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
+        => await Set.AddRangeAsync(entities, cancellationToken);
+    
+    /// <inheritdoc />
+    public virtual async Task AddRangeAsync(params TEntity[] entities)
+        => await Set.AddRangeAsync(entities);
 
     /// <inheritdoc />
     public virtual void BeginUpdate(TEntity entity, bool shouldSwapAttached = false)
@@ -63,13 +80,13 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
             Context.Attach(entity);
         }
     }
-
+    
     /// <inheritdoc />
     public virtual void Delete(TEntity entity)
     {
         Set.Remove(entity);
     }
-
+    
     /// <inheritdoc />
     public virtual void Delete(TId id)
     {
@@ -101,9 +118,9 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
     }
 
     /// <inheritdoc />
-    public virtual async Task DisableAsync(TId id)
+    public virtual async Task DisableAsync(TId id, CancellationToken cancellationToken = default)
     {
-        var entity = await GetAsync(id).ConfigureAwait(false);
+        var entity = await GetAsync(new object[] { id }, cancellationToken).ConfigureAwait(false);
         
         if (entity is not IDisableableEntity)
             throw new InvalidOperationException("Can't disable an entity that isn't disableable.");
@@ -126,11 +143,11 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
     }
 
     /// <inheritdoc />
-    public virtual async Task DisableRangeAsync(IEnumerable<TId> ids)
+    public virtual async Task DisableRangeAsync(IEnumerable<TId> ids, CancellationToken cancellationToken = default)
     {
         var entities = await Set
             .Join(ids, ent => ent.Id, id => id, (ent, id) => ent)
-            .ToListAsync().ConfigureAwait(false);
+            .ToListAsync(cancellationToken).ConfigureAwait(false);
         
         if (entities.FirstOrDefault() is not IDisableableEntity)
             throw new InvalidOperationException("Can't disable an entity that isn't disableable.");
