@@ -86,7 +86,7 @@ public interface IReadOnlyRepository<TEntity,TId> : IRepositoryBase where TEntit
     Task<IReadOnlyList<TProjectTo>> GetAllAsync<TProjectTo>(CancellationToken cancellationToken = default) where TProjectTo : class;
 
     /// <summary>
-    /// Counts the entities, optionally using a provided <see cref="ISpecification{T}"/>.
+    /// Counts the entities that satisfy the given <see cref="ISpecification{T}"/>.
     /// </summary>
     /// <param name="specification">Specification for the query.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -101,7 +101,7 @@ public interface IReadOnlyRepository<TEntity,TId> : IRepositoryBase where TEntit
     Task<long> LongCountAsync(CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Asynchronously determines whether any elements satisfy the condition.
+    /// Asynchronously determines whether any elements satisfy the given condition.
     /// </summary>
     /// <param name="predicate">Predicate for the query.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
@@ -109,7 +109,7 @@ public interface IReadOnlyRepository<TEntity,TId> : IRepositoryBase where TEntit
     Task<bool> AnyAsync(Expression<Func<TEntity,bool>> predicate, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Asynchronously determines whether any elements satisfy the condition.
+    /// Asynchronously determines whether any elements satisfy the given <see cref="ISpecification{TEntity}"/>.
     /// </summary>
     /// <param name="specification">Specification for the query.</param>
     /// <param name="cancellationToken">Cancellation token.</param>

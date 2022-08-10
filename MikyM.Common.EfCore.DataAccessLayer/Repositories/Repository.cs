@@ -151,7 +151,7 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
         
         if (entities.FirstOrDefault() is not IDisableableEntity)
             throw new InvalidOperationException("Can't disable an entity that isn't disableable.");
-        
+
         BeginUpdateRange(entities);
         entities.ForEach(x => ((IDisableableEntity)x).IsDisabled = true);
     }
