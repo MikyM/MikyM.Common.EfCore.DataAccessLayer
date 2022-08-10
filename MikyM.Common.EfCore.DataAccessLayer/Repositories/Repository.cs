@@ -45,7 +45,7 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
         => await Set.AddRangeAsync(entities);
 
     /// <inheritdoc />
-    public virtual void BeginUpdate(TEntity entity, bool shouldSwapAttached = false)
+    public virtual EntityEntry<TEntity> BeginUpdate(TEntity entity, bool shouldSwapAttached = false)
     {
         var local = Set.Local.FirstOrDefault(entry => entry.Id.Equals(entity.Id));
 
@@ -55,15 +55,17 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
         }
         else if (local is not null && !shouldSwapAttached)
         {
-            return;
+            return Context.Entry(local);
         }
 
-        Context.Attach(entity);
+        return Context.Attach(entity);
     }
 
     /// <inheritdoc />
-    public virtual void BeginUpdateRange(IEnumerable<TEntity> entities, bool shouldSwapAttached = false)
+    public virtual IReadOnlyList<EntityEntry<TEntity>> BeginUpdateRange(IEnumerable<TEntity> entities, bool shouldSwapAttached = false)
     {
+        var entries = new List<EntityEntry<TEntity>>();
+
         foreach (var entity in entities)
         {
             var local = Set.Local.FirstOrDefault(entry => entry.Id.Equals(entity.Id));
@@ -74,11 +76,14 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
             }
             else if (local is not null && !shouldSwapAttached)
             {
-                return;
+                entries.Add(Context.Entry(local));
+                continue;
             }
 
-            Context.Attach(entity);
+            entries.Add(Context.Attach(entity));
         }
+
+        return entries.AsReadOnly();
     }
     
     /// <inheritdoc />

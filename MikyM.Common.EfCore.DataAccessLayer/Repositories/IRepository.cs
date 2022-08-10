@@ -155,7 +155,7 @@ public interface IRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> whe
     ///     The <see cref="EntityEntry{TEntity}" /> for the entity. The entry provides
     ///     access to change tracking information and operations for the entity.
     /// </returns>
-    void BeginUpdate(TEntity entity, bool shouldSwapAttached = false);
+    EntityEntry<TEntity> BeginUpdate(TEntity entity, bool shouldSwapAttached = false);
 
     /// <summary>
     ///     <para>
@@ -193,10 +193,10 @@ public interface IRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> whe
     /// <param name="entities">The entity to begin updating.</param>
     /// <param name="shouldSwapAttached">Whether to swapped an already attached entity if found with one that was provided.</param>
     /// <returns>
-    ///     The <see cref="EntityEntry{TEntity}" /> for the entity. The entry provides
-    ///     access to change tracking information and operations for the entity.
+    ///     The <see cref="EntityEntry{TEntity}" /> for the entities. The entries provide
+    ///     access to change tracking information and operations for the entities.
     /// </returns>
-    void BeginUpdateRange(IEnumerable<TEntity> entities, bool shouldSwapAttached = false);
+    IReadOnlyList<EntityEntry<TEntity>> BeginUpdateRange(IEnumerable<TEntity> entities, bool shouldSwapAttached = false);
 
     /// <summary>
     ///     Begins tracking the given entity in the <see cref="EntityState.Deleted" /> state such that it will
@@ -221,10 +221,6 @@ public interface IRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> whe
     ///     </para>
     /// </remarks>
     /// <param name="entity">The entity to remove.</param>
-    /// <returns>
-    ///     The <see cref="EntityEntry{TEntity}" /> for the entity. The entry provides
-    ///     access to change tracking information and operations for the entity.
-    /// </returns>
     void Delete(TEntity entity);
 
     /// <summary>
@@ -251,10 +247,6 @@ public interface IRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> whe
     ///     </para>
     /// </remarks>
     /// <param name="id">The Id of the entity to remove.</param>
-    /// <returns>
-    ///     The <see cref="EntityEntry{TEntity}" /> for the entity. The entry provides
-    ///     access to change tracking information and operations for the entity.
-    /// </returns>
     void Delete(TId id);
 
     /// <summary>
