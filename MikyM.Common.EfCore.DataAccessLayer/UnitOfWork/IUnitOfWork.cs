@@ -17,13 +17,13 @@ public interface IUnitOfWork : IUnitOfWorkBase
     /// <param name="cancellationToken">Cancellation token.</param>
     Task UseTransactionAsync(CancellationToken cancellationToken = default);
 
-    /// <inheritdoc cref="IUnitOfWorkBase.CommitAsync(string)"/>
+    /// <inheritdoc cref="IUnitOfWorkBase.CommitAsync(string, CancellationToken)"/>
     /// <returns>Number of affected rows.</returns>
     /// <param name="auditUserId">The ID of the user responsible for the changes.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     Task<int> CommitWithCountAsync(string auditUserId, CancellationToken cancellationToken = default);
 
-    /// <inheritdoc cref="IUnitOfWorkBase.CommitAsync()"/>
+    /// <inheritdoc cref="IUnitOfWorkBase.CommitAsync(CancellationToken)"/>
     /// <returns>Number of affected rows.</returns>
     /// <param name="cancellationToken">Cancellation token.</param>
     Task<int> CommitWithCountAsync(CancellationToken cancellationToken = default);
