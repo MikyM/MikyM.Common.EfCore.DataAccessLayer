@@ -364,6 +364,6 @@ public interface IRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> whe
 /// </summary>
 /// <typeparam name="TEntity">Entity that derives from <see cref="Entity"/>.</typeparam>
 [PublicAPI]
-public interface IRepository<TEntity> : IRepository<TEntity,long> where TEntity : Entity<long>
+public interface IRepository<TEntity> : IRepository<TEntity,long>, IReadOnlyRepository<TEntity> where TEntity : Entity<long>
 {
 }
