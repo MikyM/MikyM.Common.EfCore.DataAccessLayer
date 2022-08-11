@@ -10,7 +10,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// </summary>
 /// <inheritdoc cref="IReadOnlyRepository{TEntity,TId}"/>
 [PublicAPI]
-public class ReadOnlyRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> where TEntity :  class, IEntity<TId> where TId : IComparable, IEquatable<TId>, IComparable<TId>
+public class ReadOnlyRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> where TEntity : Entity<TId> where TId : IComparable, IEquatable<TId>, IComparable<TId>
 {
     /// <inheritdoc />
     public Type EntityType => typeof(TEntity);
@@ -137,7 +137,7 @@ public class ReadOnlyRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> 
 /// </summary>
 /// <inheritdoc cref="IReadOnlyRepository{TEntity}"/>
 [PublicAPI]
-public class ReadOnlyRepository<TEntity> : ReadOnlyRepository<TEntity, long>, IReadOnlyRepository<TEntity> where TEntity : class, IEntity<long>
+public class ReadOnlyRepository<TEntity> : ReadOnlyRepository<TEntity, long>, IReadOnlyRepository<TEntity> where TEntity : Entity<long>
 {
     internal ReadOnlyRepository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator) : base(context, specificationEvaluator)
     {

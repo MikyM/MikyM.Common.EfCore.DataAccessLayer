@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using MikyM.Common.EfCore.DataAccessLayer.Helpers;
 using MikyM.Common.EfCore.DataAccessLayer.Repositories;
 using MikyM.Common.EfCore.DataAccessLayer.Specifications.Evaluators;
+using MikyM.Common.Utilities.Extensions;
 
 namespace MikyM.Common.EfCore.DataAccessLayer.UnitOfWork;
 
@@ -29,11 +30,15 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
     /// <summary>
     /// Repository cache.
     /// </summary>
-    private ConcurrentDictionary<string, Lazy<IRepositoryBase>>? _repositories;
+    private ConcurrentDictionary<RepositoryEntryKey, Lazy<RepositoryEntry>>? _repositories;
+
     /// <summary>
-    /// Repository entity type cache.
+    /// Allowed repo types.
     /// </summary>
-    private ConcurrentDictionary<string, string>? _entityTypesOfRepositories;
+    private Type[] _allowedRepoTypes =
+    {
+        typeof(IRepository<>), typeof(IRepository<,>), typeof(IReadOnlyRepository<>), typeof(IReadOnlyRepository<,>)
+    };
 
     /// <summary>
     /// Inner <see cref="IDbContextTransaction"/>.
@@ -60,72 +65,139 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
     public async Task UseTransactionAsync(CancellationToken cancellationToken = default)
         => _transaction ??= await Context.Database.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
+    /// <inheritdoc cref="IUnitOfWork.GetRepositoryFor{TRepository}" />
+    public IRepository<TEntity> GetRepositoryFor<TEntity>() where TEntity : Entity<long>
+    {
+        var entityType = typeof(TEntity);
+        var repositoryType = UoFCache.CachedCrudRepos.GetValueOrDefault(entityType);
+
+        if (repositoryType is null)
+            throw new InvalidOperationException("Couldn't find proper type in cache.");
+
+        return LazilyGetOrCreateRepository<IRepository<TEntity>>(repositoryType, entityType, true);
+    }
+
+    /// <inheritdoc cref="IUnitOfWork.GetReadOnlyRepositoryFor{TRepository}" />
+    public IReadOnlyRepository<TEntity> GetReadOnlyRepositoryFor<TEntity>() where TEntity : Entity<long>
+    {
+        var entityType = typeof(TEntity);
+        var repositoryType = UoFCache.CachedReadOnlyRepos.GetValueOrDefault(entityType);
+
+        if (repositoryType is null)
+            throw new InvalidOperationException("Couldn't find proper type in cache.");
+
+        return LazilyGetOrCreateRepository<IReadOnlyRepository<TEntity>>(repositoryType, entityType, false);
+    }
+
+    /// <inheritdoc cref="IUnitOfWork.GetRepositoryFor{TRepository,TId}" />
+    public IRepository<TEntity, TId> GetRepositoryFor<TEntity, TId>() where TEntity : Entity<TId>
+        where TId : IComparable, IEquatable<TId>, IComparable<TId>
+    {
+        var entityType = typeof(TEntity);
+        var repositoryType = UoFCache.CachedCrudGenericIdRepos.GetValueOrDefault(entityType);
+
+        if (repositoryType is null)
+            throw new InvalidOperationException("Couldn't find proper type in cache.");
+
+        return LazilyGetOrCreateRepository<IRepository<TEntity, TId>>(repositoryType, entityType, true);
+    }
+
+    /// <inheritdoc cref="IUnitOfWork.GetReadOnlyRepositoryFor{TRepository,TId}" />
+    public IReadOnlyRepository<TEntity, TId> GetReadOnlyRepositoryFor<TEntity, TId>() where TEntity : Entity<TId>
+        where TId : IComparable, IEquatable<TId>, IComparable<TId>
+    {
+        var entityType = typeof(TEntity);
+        var repositoryType = UoFCache.CachedReadOnlyGenericIdRepos.GetValueOrDefault(entityType);
+
+        if (repositoryType is null)
+            throw new InvalidOperationException("Couldn't find proper type in cache.");
+
+        return LazilyGetOrCreateRepository<IReadOnlyRepository<TEntity, TId>>(repositoryType, entityType, false);
+    }
+
     /// <inheritdoc cref="IUnitOfWork.GetRepository{TRepository}" />
     public TRepository GetRepository<TRepository>() where TRepository : class, IRepositoryBase
     {
         var givenType = typeof(TRepository);
-        if (!givenType.IsInterface || !givenType.IsGenericType)
-            throw new NotSupportedException("You can only retrieve types: IRepository<TEntity>, IRepository<TEntity,TId>, IReadOnlyRepository<TEntity> and IReadOnlyRepository<TEntity,TId>.");
+        if (!givenType.IsInterface || !givenType.IsGenericType ||
+            !_allowedRepoTypes.Contains(givenType.GetGenericTypeDefinition()))
+            throw new NotSupportedException(
+                "You can only retrieve types: IRepository<TEntity>, IRepository<TEntity,TId>, IReadOnlyRepository<TEntity> and IReadOnlyRepository<TEntity,TId>.");
 
-        _repositories ??= new ConcurrentDictionary<string, Lazy<IRepositoryBase>>();
-        _entityTypesOfRepositories ??= new ConcurrentDictionary<string, string>();
-
-        Type? repositoryType;
-        string repositoryTypeFullName;
-        
         var entityType = givenType.GetGenericArguments().FirstOrDefault();
         if (entityType is null)
-            throw new ArgumentException("Couldn't retrieve entity type from generic arguments on given repository type.");
-        var entityTypeName = entityType.FullName ?? entityType.Name;
-        
+            throw new ArgumentException(
+                "Couldn't retrieve entity type from generic arguments on given repository type.");
+
+        Type? repositoryType;
+        bool isCrud;
         switch (givenType.IsGenericType)
         {
             case true when givenType.GetGenericTypeDefinition() == typeof(IRepository<,>):
                 repositoryType = UoFCache.CachedCrudGenericIdRepos.GetValueOrDefault(entityType);
-                repositoryTypeFullName = repositoryType?.FullName ?? throw new InvalidOperationException("Couldn't find proper type in cache.");
+                isCrud = true;
                 break;
             case true when givenType.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<,>):
                 repositoryType = UoFCache.CachedReadOnlyGenericIdRepos.GetValueOrDefault(entityType);
-                repositoryTypeFullName = repositoryType?.FullName ?? throw new InvalidOperationException("Couldn't find proper type in cache.");
+                isCrud = false;
                 break;
             case true when givenType.GetGenericTypeDefinition() == typeof(IRepository<>):
                 repositoryType = UoFCache.CachedCrudRepos.GetValueOrDefault(entityType);
-                repositoryTypeFullName = repositoryType?.FullName ?? throw new InvalidOperationException("Couldn't find proper type in cache.");
+                isCrud = true;
                 break;
             case true when givenType.GetGenericTypeDefinition() == typeof(IReadOnlyRepository<>):
                 repositoryType = UoFCache.CachedReadOnlyRepos.GetValueOrDefault(entityType);
-                repositoryTypeFullName = repositoryType?.FullName ?? throw new InvalidOperationException("Couldn't find proper type in cache.");
+                isCrud = false;
                 break;
             default:
-                throw new NotSupportedException("You can only retrieve types: IRepository<TEntity>, IRepository<TEntity,TId>, IReadOnlyRepository<TEntity> and IReadOnlyRepository<TEntity,TId>.");
-        }
-        
+                throw new NotSupportedException(
+                    "You can only retrieve types: IRepository<TEntity>, IRepository<TEntity,TId>, IReadOnlyRepository<TEntity> and IReadOnlyRepository<TEntity,TId>.");
+        };
+
         if (repositoryType is null)
             throw new InvalidOperationException("Couldn't find proper type in cache.");
 
-        // lazy to avoid creating whole repository and then discarding it due to the fact that GetOrAdd isn't atomic, creation of Lazy<T> is very cheap
-        var lazyRepository = _repositories.GetOrAdd(repositoryTypeFullName, _ =>
-        {
-            if (!_entityTypesOfRepositories.TryAdd(entityTypeName, entityTypeName))
-                throw new InvalidOperationException(
-                    "Seems like you tried to create a different type of repository (ie. both read-only and crud) for same entity type within same unit of work instance - it is not supported as it may lead to unexpected results and it is not advised as it makes code less readable.");
+        return LazilyGetOrCreateRepository<TRepository>(repositoryType, entityType, isCrud);
+    }
 
-            return new Lazy<IRepositoryBase>(() =>
+    /// <summary>
+    /// Lazily creates a new repository instance of a given type.
+    /// </summary>
+    /// <param name="repositoryType">Repository closed generic type.</param>
+    /// <param name="entityType">Entity type.</param>
+    /// <param name="isCrud">Whether the repository is a crud repository.</param>
+    /// <typeparam name="TRepository">Type of the wanted repository</typeparam>
+    /// <returns>Created repo instance.</returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    private TRepository LazilyGetOrCreateRepository<TRepository>(Type repositoryType, Type entityType, bool isCrud) where TRepository : IRepositoryBase
+    {
+        _repositories ??= new ConcurrentDictionary<RepositoryEntryKey, Lazy<RepositoryEntry>>();
+
+        var repositoryTypeName = repositoryType.FullName ?? repositoryType.Name;
+        var entityTypeName = entityType.FullName ?? entityType.Name;
+
+        var key = new RepositoryEntryKey(entityTypeName, isCrud);
+
+        var repositoryEntry = _repositories.GetOrAdd(key, new Lazy<RepositoryEntry>(() =>
+        {
+            var lazyRepo = new Lazy<IRepositoryBase>(() =>
             {
                 var instance =
                     InstanceFactory.CreateInstance(repositoryType, Context,
                         _specificationEvaluator);
 
-                if (instance is null) 
-                    throw new InvalidOperationException($"Couldn't create an instance of {repositoryTypeFullName}");
+                if (instance is null)
+                    throw new InvalidOperationException($"Couldn't create an instance of {repositoryTypeName}");
 
                 return (TRepository)instance;
-            });
-        });
+            }, LazyThreadSafetyMode.ExecutionAndPublication);
 
-        return (TRepository)lazyRepository.Value;
+            return new RepositoryEntry(entityType, repositoryType, lazyRepo, isCrud);
+        }, LazyThreadSafetyMode.ExecutionAndPublication));
+
+        return (TRepository)repositoryEntry.Value.LazyRepo.Value;
     }
-
+    
     /// <inheritdoc />
     public async Task RollbackAsync(CancellationToken cancellationToken = default)
     {
@@ -214,8 +286,49 @@ public sealed class UnitOfWork<TContext> : IUnitOfWork<TContext> where TContext 
         }
 
         _repositories = null;
-        _entityTypesOfRepositories = null;
 
         _disposed = true;
     }
+}
+
+/// <summary>
+/// Repository entry.
+/// </summary>
+internal class RepositoryEntry
+{
+    internal RepositoryEntry(Type entityType, Type repoClosedGenericType, Lazy<IRepositoryBase> lazyRepo, bool isCrud)
+    {
+        EntityType = entityType;
+        RepoClosedGenericType = repoClosedGenericType;
+        IsCrud = isCrud;
+        LazyRepo = lazyRepo;
+    }
+    internal Type EntityType { get; }
+    internal Type RepoClosedGenericType { get; }
+    internal bool IsCrud { get; }
+    internal Lazy<IRepositoryBase> LazyRepo { get; }
+}
+
+/// <summary>
+/// Repository entry key.
+/// </summary>
+internal readonly struct RepositoryEntryKey : IEquatable<RepositoryEntryKey>
+{
+    internal RepositoryEntryKey(string entityTypeName, bool isCrud)
+    {
+        EntityTypeName = entityTypeName;
+        IsCrud = isCrud;
+    }
+
+    private string EntityTypeName { get; }
+    private bool IsCrud { get; }
+
+    public bool Equals(RepositoryEntryKey other)
+        => EntityTypeName == other.EntityTypeName && IsCrud == other.IsCrud;
+
+    public override bool Equals(object? obj)
+        => obj is RepositoryEntryKey other && Equals(other);
+
+    public override int GetHashCode()
+        => HashCode.Combine(EntityTypeName, IsCrud);
 }

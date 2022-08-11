@@ -13,7 +13,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// <inheritdoc cref="IRepository{TEntity,TId}"/>
 [PublicAPI]
 public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IRepository<TEntity,TId>
-    where TEntity : EntityBase, IEntity<TId> where TId : IComparable, IEquatable<TId>, IComparable<TId>
+    where TEntity : Entity<TId> where TId : IComparable, IEquatable<TId>, IComparable<TId>
 {
     internal Repository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator) : base(context,
         specificationEvaluator)
@@ -220,7 +220,7 @@ public class Repository<TEntity,TId> : ReadOnlyRepository<TEntity,TId>, IReposit
 /// </summary>
 /// <inheritdoc cref="IRepository{TEntity}"/>
 [PublicAPI]
-public class Repository<TEntity> : Repository<TEntity, long>, IRepository<TEntity> where TEntity : EntityBase, IEntity<long>
+public class Repository<TEntity> : Repository<TEntity, long>, IRepository<TEntity> where TEntity : Entity<long>
 {
     internal Repository(IEfDbContext context, ISpecificationEvaluator specificationEvaluator) : base(context, specificationEvaluator)
     {

@@ -11,7 +11,7 @@ namespace MikyM.Common.EfCore.DataAccessLayer.Repositories;
 /// <typeparam name="TEntity">Entity that derives from <see cref="Entity{TId}"/>.</typeparam>
 /// <typeparam name="TId">Type of the Id in <typeparamref name="TEntity"/>.</typeparam>
 [PublicAPI]
-public interface IRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> where TEntity : class, IEntity<TId> where TId : IComparable, IEquatable<TId>, IComparable<TId>
+public interface IRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> where TEntity : Entity<TId> where TId : IComparable, IEquatable<TId>, IComparable<TId>
 {
     /// <summary>
     ///     <para>
@@ -364,6 +364,6 @@ public interface IRepository<TEntity,TId> : IReadOnlyRepository<TEntity,TId> whe
 /// </summary>
 /// <typeparam name="TEntity">Entity that derives from <see cref="Entity"/>.</typeparam>
 [PublicAPI]
-public interface IRepository<TEntity> : IRepository<TEntity,long> where TEntity : class, IEntity<long>
+public interface IRepository<TEntity> : IRepository<TEntity,long> where TEntity : Entity<long>
 {
 }
